@@ -1,0 +1,12 @@
+[
+  {
+    "id": "l2-cache-gate-netlist",
+    "name": "L2_Coherent_Cache_Netlist.v",
+    "category": "Netlists",
+    "icon": "cpu",
+    "version": "2.1.0",
+    "size": "4.1 MB",
+    "status": "Encrypted",
+    "fileType": "Gate-Level Netlist (TSMC 65nm)"
+  }
+]

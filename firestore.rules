@@ -1,0 +1,102 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net: Default-deny catch-all rule
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Common helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedEmail() {
+      return isSignedIn() && 
+             request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isVerifiedEmail() && 
+             request.auth.token.email.toLowerCase() == 'crazyplayz61@gmail.com';
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // 1. Portfolio Access Requests
+    match /portfolio_access_requests/{requestId} {
+      // Access allowed only to validated administrators
+      allow read: if isAdmin();
+      
+      // Anyone can submit a valid access request
+      allow create: if isValidId(requestId) && isValidPortfolioAccessRequest(incoming());
+      
+      // Updates are restricted to administrators modifying state/timestamps
+      allow update: if isAdmin() && isValidPortfolioAccessRequest(incoming()) && (
+        (incoming().diff(existing()).affectedKeys().hasOnly(['status', 'approvedAt', 'approvedBy', 'rejectedAt', 'rejectedBy']))
+      );
+
+      // Deletes are restricted to administrators
+      allow delete: if isAdmin();
+    }
+
+    // 2. Access Requests (General)
+    match /access_requests/{requestId} {
+      // Access allowed only to validated administrators
+      allow read: if isAdmin();
+      
+      // Anyone can submit a valid access request
+      allow create: if isValidId(requestId) && isValidAccessRequest(incoming());
+      
+      // Updates are restricted to administrators
+      allow update: if isAdmin() && isValidAccessRequest(incoming()) && (
+        (incoming().diff(existing()).affectedKeys().hasOnly(['status', 'reviewedAt', 'reviewedBy']))
+      );
+
+      // Deletes are restricted to administrators
+      allow delete: if isAdmin();
+    }
+
+    // Validation Helper for PortfolioAccessRequest
+    function isValidPortfolioAccessRequest(data) {
+      return data.keys().hasAll(['id', 'name', 'email', 'university', 'purpose', 'status', 'createdAt']) &&
+             data.id is string && data.id.size() <= 128 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.email is string && data.email.size() > 0 && data.email.size() <= 100 &&
+             data.university is string && data.university.size() > 0 && data.university.size() <= 150 &&
+             data.purpose is string && data.purpose.size() > 0 && data.purpose.size() <= 1000 &&
+             data.status in ['pending', 'approved', 'rejected'] &&
+             data.createdAt is timestamp &&
+             (!('approvedAt' in data) || data.approvedAt == null || data.approvedAt is timestamp) &&
+             (!('approvedBy' in data) || data.approvedBy == null || data.approvedBy is string) &&
+             (!('rejectedAt' in data) || data.rejectedAt == null || data.rejectedAt is timestamp) &&
+             (!('rejectedBy' in data) || data.rejectedBy == null || data.rejectedBy is string);
+    }
+
+    // Validation Helper for AccessRequest (General)
+    function isValidAccessRequest(data) {
+      return data.keys().hasAll(['id', 'name', 'email', 'organization', 'purpose', 'requestedProject', 'status', 'createdAt']) &&
+             data.id is string && data.id.size() <= 128 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.email is string && data.email.size() > 0 && data.email.size() <= 100 &&
+             data.organization is string && data.organization.size() > 0 && data.organization.size() <= 150 &&
+             data.purpose is string && data.purpose.size() > 0 && data.purpose.size() <= 1000 &&
+             data.requestedProject is string && data.requestedProject.size() > 0 && data.requestedProject.size() <= 200 &&
+             data.status in ['pending', 'under_review', 'approved', 'declined'] &&
+             data.createdAt is timestamp &&
+             (!('reviewedAt' in data) || data.reviewedAt == null || data.reviewedAt is timestamp) &&
+             (!('reviewedBy' in data) || data.reviewedBy == null || data.reviewedBy is string);
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "summary": "Frontend-only verification of the new 'Functional Verification Waveforms' subsection on /projects/rv32im-soc-processor. All acceptance criteria verified: subsection with data-testid='functional-verification-waveforms' renders inside Simulation Results (Section 04, marked 04a), exactly 10 accordions in the required order and titles, all collapsed by default, single-open toggling works, empty placeholder text 'Waveform image pending upload' with zero <img> elements in unpopulated slot, guarded by FIVE_STAGE_SOC_SLUGS (not shown on /projects/rv32im-core), rest of ProjectDetailPage (Overview, Architecture Specs, Structural Block Diagram, Simulation copy, Waveform Results collapsible, Verification Outputs, Synthesis, Timing, Floorplan, GDS) still renders. TopNav intact (Home/About/Projects/Contact/Request Access/Portal) with no Resume link.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "checks_performed": {
+    "functional_verification_waveforms_section": {
+      "present_on_rv32im-soc-processor": true,
+      "header_text": "FUNCTIONAL VERIFICATION WAVEFORMS",
+      "section_index_badge": "04a",
+      "accordion_count": 10,
+      "accordion_order_and_titles": [
+        {"data-testid": "verif-accordion-cpu", "title": "CPU VERIFICATION"},
+        {"data-testid": "verif-accordion-sram", "title": "SRAM VERIFICATION"},
+        {"data-testid": "verif-accordion-apb-bus", "title": "APB BUS VERIFICATION"},
+        {"data-testid": "verif-accordion-gpio", "title": "GPIO VERIFICATION"},
+        {"data-testid": "verif-accordion-timer", "title": "TIMER VERIFICATION"},
+        {"data-testid": "verif-accordion-uart", "title": "UART VERIFICATION"},
+        {"data-testid": "verif-accordion-spi", "title": "SPI VERIFICATION"},
+        {"data-testid": "verif-accordion-plic", "title": "PLIC VERIFICATION"},
+        {"data-testid": "verif-accordion-memory-decoder", "title": "MEMORY DECODER VERIFICATION"},
+        {"data-testid": "verif-accordion-complete-soc", "title": "COMPLETE SOC VERIFICATION"}
+      ],
+      "all_collapsed_by_default": true,
+      "single_open_behavior": true,
+      "second_click_collapses": true,
+      "placeholder_text_present": "Waveform image pending upload (dom text 'Waveform image pending upload', rendered uppercase via CSS)",
+      "no_img_in_unpopulated_slot": true,
+      "verif_notes_hidden_when_collapsed": true
+    },
+    "guarded_on_other_projects": {
+      "/projects/rv32im-core": "functional-verification-waveforms count = 0 (PASS)"
+    },
+    "other_sections_intact": [
+      "OVERVIEW",
+      "ARCHITECTURE SPECIFICATIONS",
+      "STRUCTURAL BLOCK DIAGRAM",
+      "SIMULATION RESULTS (with pre-existing simulation.png slot + Waveform Results collapsible)",
+      "VERIFICATION OUTPUTS",
+      "SYNTHESIS REPORTS",
+      "TIMING ANALYSIS",
+      "FLOORPLAN & PHYSICAL DESIGN",
+      "GDS / LAYOUT"
+    ],
+    "topnav_testids_present": ["nav-link-home","nav-link-about","nav-link-projects","nav-link-contact","nav-link-access-request","nav-link-portal"],
+    "nav_link_resume_absent": true
+  },
+  "critical_code_review_comments": [
+    "VerificationWaveforms.tsx is well-structured (single 383-line file with WaveformSlot + FullscreenViewer sub-components, keyboard shortcuts, wheel-zoom, pan). Empty-first behavior is correctly implemented via failed/!src short-circuit — image element only mounts inside a hidden probe (net rendered <img> in slot = 0 when the PNG at /projects/<slug>/waveforms/<id>.png is missing).",
+    "Minor: the `WaveformSlot` component does not attempt to preload / probe the image; it relies on onError of the actual <img>. That means on the very first render after a real PNG is uploaded, the DOM will briefly contain one <img src=...>. Not a bug — expected — but worth noting the empty-state test must assert `failed || !src` semantics rather than 'never any <img>' after images ship.",
+    "Minor a11y: the accordion toggle uses aria-expanded correctly but there is no aria-controls binding it to the collapsible content div. Consider adding `aria-controls={`verif-content-${m.id}`}` and matching id on the motion.div for screen readers.",
+    "Nit: ChevronDown import from lucide-react rotates via CSS class — fine — but the `initial={false}` on AnimatePresence pairs with a mounted/unmounted content div, meaning content is fully removed on close (good for the 'hidden on default' requirement).",
+    "The single-open behavior (only one accordion open at a time) is enforced by `useState<string | null>` in the parent. The problem statement says 'single-open behaviour is acceptable' so this matches spec."
+  ],
+  "test_report_links": [],
+  "action_items": [],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped as requested)", "frontend": "100%"},
+  "test_credentials": "none required",
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Functional Verification Waveforms subsection is fully implemented and verified on /projects/rv32im-soc-processor. Component at /app/src/components/verification/VerificationWaveforms.tsx renders 10 accordions (cpu/sram/apb-bus/gpio/timer/uart/spi/plic/memory-decoder/complete-soc), all collapsed by default, expects real PNGs at /public/projects/rv32im-soc-processor/waveforms/<id>.png. Guard is FIVE_STAGE_SOC_SLUGS in ProjectDetailPage.tsx (rv32im-soc-processor, five-stage-pipeline, five-stage-pipe). When testing after PNG uploads, expect an <img data-testid='waveform-<id>-open'> to appear and clicking it should open the fullscreen zoom/pan viewer (data-testid='waveform-fullscreen' with zoom-in/zoom-out/zoom-reset/zoom-close controls).",
+  "rca of the issue": "n/a - no issues found"
+}

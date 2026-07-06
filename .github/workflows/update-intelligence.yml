@@ -1,0 +1,67 @@
+name: Autonomous Semiconductor Intelligence Auto-Update
+
+on:
+  schedule:
+    # Run once every day at 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    # Support manual triggered executions from GitHub Actions console
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  update-intelligence:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Execute Semiconductor News Generator
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node scripts/generateNews.js
+
+      - name: Execute Research Papers Generator
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node scripts/generatePapers.js
+
+      - name: Execute Trends & Digest Compiler
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node scripts/generateTrending.js
+
+      - name: Run Quality Verification & Cleanup
+        run: |
+          node scripts/cleanup.js
+          node scripts/validateJson.js
+
+      - name: Analyze Content Changes (Zero-Delta Diff Detection)
+        id: check_changes
+        run: |
+          CHANGE_STATUS=$(node scripts/compareFeeds.js)
+          echo "status=$CHANGE_STATUS" >> $GITHUB_OUTPUT
+          echo "Detected pipeline change status: $CHANGE_STATUS"
+
+      - name: Commit and Push Verified Updates
+        if: steps.check_changes.outputs.status == 'CHANGED'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/data/news.json public/data/papers.json public/data/trending.json
+          git commit -m "chore(intel): automated semiconductor intelligence refresh [skip ci]"
+          git push origin main

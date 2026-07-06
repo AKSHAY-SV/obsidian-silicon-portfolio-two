@@ -1,0 +1,7 @@
+{
+  "lutCount": "14,200 Cells",
+  "timingSlack": "+0.28 ns @ 400MHz",
+  "area": "0.12 mm²",
+  "power": "18.2 mW",
+  "frequency": "450 MHz (TSMC 65nm)"
+}

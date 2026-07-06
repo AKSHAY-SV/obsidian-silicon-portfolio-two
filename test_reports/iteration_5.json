@@ -1,0 +1,18 @@
+{
+  "summary": "Verified deletion of two blocks on ProjectDetailPage. On /projects/rv32im-soc-processor: 'Cycle-accurate simulation is captured via GTKWave' text, 'Add simulation.png' placeholder, 'WAVEFORM RESULTS' collapsible section (data-testid=toggle-waveforms), and 'Drop waveform.png' placeholder are all gone. Section 04 SIMULATION RESULTS renders with only Functional Verification Waveforms subsection (data-testid=functional-verification-waveforms) containing all 10 accordions (cpu, sram, apb-bus, gpio, timer, uart, spi, plic, memory-decoder, complete-soc), all collapsed. Section IDs continuous 01-10. On /projects/rv32im-core (no verification viewer): Section 04 is completely omitted; ordering is 01,02,03,05,06,07,08,09,10 as expected. TopNav has Home/About/Projects/Contact/Request Access/Portal, no Resume regression.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "100%"},
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "ProjectDetailPage renders 10 sections for SoC (Simulation Results only contains VerificationWaveforms viewer with 10 accordions) and skips section 04 for non-SoC projects. All removals confirmed."
+}

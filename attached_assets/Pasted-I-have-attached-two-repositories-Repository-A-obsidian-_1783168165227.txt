@@ -1,0 +1,133 @@
+I have attached two repositories.
+
+Repository A: obsidian-silicon-portfolio
+Repository B: obsidian-silicon-portfolio-store
+
+Repository A MUST remain the PRIMARY repository and the final codebase.
+
+Your task is to synchronize ALL useful features, improvements and additions from Repository B into Repository A.
+
+IMPORTANT RULES
+
+• Repository A is the source of truth.
+• Repository B is a feature repository.
+• Do NOT replace Repository A with Repository B.
+• Do NOT overwrite functionality that already exists in Repository A.
+• Compare every file before making changes.
+• Merge functionality rather than replacing files whenever both repositories have modified the same file.
+
+====================================================
+
+PHASE 1 — ANALYZE
+
+Before modifying anything:
+
+1. Compare both repositories completely.
+
+Categorize every file into:
+
+• Identical
+• Modified in Repository A
+• Modified in Repository B
+• Exists only in Repository A
+• Exists only in Repository B
+
+2. Detect duplicate functionality.
+
+3. Identify every feature that exists only in Repository B.
+
+====================================================
+
+PHASE 2 — SYNCHRONIZE
+
+Integrate ALL useful features from Repository B into Repository A.
+
+This includes but is not limited to:
+
+• New React components
+• Project Detail Pages
+• Featured Projects
+• Download Cards
+• New UI components
+• Additional routes
+• Additional data files
+• Better layouts
+• Improved styling
+• Project organization
+• New animations
+• Additional reusable components
+
+Whenever a feature from Repository B is missing in Repository A, migrate it.
+
+====================================================
+
+FILES THAT EXIST IN BOTH REPOSITORIES
+
+If a file exists in both repositories:
+
+DO NOT simply overwrite one with the other.
+
+Instead:
+
+• Compare both implementations.
+• Preserve all existing functionality from Repository A.
+• Integrate any missing improvements from Repository B.
+• Produce one combined implementation.
+
+Never remove working functionality unless it is completely redundant.
+
+====================================================
+
+PRESERVE THESE SYSTEMS FROM REPOSITORY A
+
+These systems are considered production-ready and must continue working after synchronization.
+
+• Firebase integration
+• Secure Portal
+• Authentication
+• Admin Dashboard
+• Backend
+• API routes
+• Download verification
+• Existing project pages
+• Existing routing
+• Existing animations
+• Existing styling
+
+====================================================
+
+DO NOT
+
+• Delete features
+• Remove routes
+• Remove pages
+• Remove Firebase
+• Remove backend functionality
+• Replace entire files without comparing them
+• Break existing builds
+
+====================================================
+
+AFTER EACH MAJOR FEATURE
+
+Verify:
+
+• The application builds successfully.
+• No TypeScript errors exist.
+• Imports are valid.
+• Routes still work.
+• Components compile successfully.
+
+====================================================
+
+FINAL OUTPUT
+
+When synchronization is complete, provide:
+
+1. Every modified file
+2. Every new file added
+3. Every migrated feature
+4. Every conflict that required manual merging
+5. Any remaining issues that require manual attention
+
+The objective is to end with ONE repository (Repository A) that contains every useful feature from both repositories while preserving all existing functionality from Repository A.

@@ -1,0 +1,67 @@
+Create a brand-new navigation tab named Portal and integrate it seamlessly into the existing React + Vite + TypeScript portfolio. Preserve the current Obsidian Architecture design language, dark theme, purple accent color palette, typography, animations, routing, responsiveness, and overall UI consistency. Do not modify or break any existing pages or functionality.
+
+The Portal should represent a premium Secure Engineering Workspace rather than a generic login page.
+
+Layout Requirements
+Add Portal to the main navigation bar.
+The page should occupy the full viewport and follow the same visual identity as the rest of the website.
+Create a centered authentication panel with elegant animations and subtle glassmorphism effects that match the current design.
+Hero Section
+
+Include a professional heading such as:
+
+Secure Engineering Portal
+
+Along with a short description explaining that this workspace provides access to private engineering assets, research documents, RTL projects, reports, verification files, and technical resources available only to approved users.
+
+Authentication Panel
+
+Create a clean authentication form containing:
+
+Authorized Email Address input
+Access Workspace button
+Loading state
+Success state
+Error state
+Pending Approval state
+
+Do not implement authentication logic yet. These are frontend placeholders only.
+
+Information Panel
+
+Beside (or below on mobile) the authentication panel, include a professional information card explaining the secure access workflow:
+
+1. Submit an Access Request
+
+Request access through the website.
+
+2. Administrator Review
+
+Requests are reviewed and approved manually.
+
+3. Email Confirmation
+
+Approved users receive an email notification.
+
+4. Secure Portal Access
+
+Enter your authorized email to access protected engineering resources.
+
+Security Indicators
+
+Add subtle security badges such as:
+
+End-to-End Secure Access
+Firebase Authentication
+Administrator Approval Required
+Protected Engineering Assets
+Future Preparation
+
+Structure the page so it can later integrate with:
+
+Firebase Authentication
+Firestore approval verification
+Secure Vercel backend
+Private GitHub asset downloads
+
+Do not implement backend logic yet. This phase is purely for creating a production-quality Portal page that is ready for the next phases.

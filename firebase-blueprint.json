@@ -1,0 +1,51 @@
+{
+  "entities": {
+    "PortfolioAccessRequest": {
+      "title": "Portfolio Access Request",
+      "description": "Holds requests for secure portfolio access",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "university": { "type": "string" },
+        "purpose": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "createdAt": { "type": "object" },
+        "approvedAt": { "type": "object" },
+        "approvedBy": { "type": "string" },
+        "rejectedAt": { "type": "object" },
+        "rejectedBy": { "type": "string" }
+      },
+      "required": ["name", "email", "university", "purpose", "status", "createdAt"]
+    },
+    "AccessRequest": {
+      "title": "Project Access Request",
+      "description": "Holds general project access requests",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "organization": { "type": "string" },
+        "purpose": { "type": "string" },
+        "requestedProject": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "under_review", "approved", "declined"] },
+        "createdAt": { "type": "object" },
+        "reviewedAt": { "type": "object" },
+        "reviewedBy": { "type": "string" }
+      },
+      "required": ["id", "name", "email", "organization", "purpose", "requestedProject", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "portfolio_access_requests/{requestId}": {
+      "schema": "PortfolioAccessRequest",
+      "description": "Requests to download/access high-security portfolios"
+    },
+    "access_requests/{requestId}": {
+      "schema": "AccessRequest",
+      "description": "General project requests"
+    }
+  }
+}

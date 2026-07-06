@@ -1,0 +1,6 @@
+{
+  "name": "Obsidian Silicon Portfolio",
+  "description": "High-precision dark-themed engineering hub and interactive simulation suite for silicon architecture, RTL designs, and ASIC flows, powered by an autonomous, data-driven semiconductor intelligence platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
