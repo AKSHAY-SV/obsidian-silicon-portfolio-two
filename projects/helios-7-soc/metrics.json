@@ -1,0 +1,7 @@
+{
+  "lutCount": "18.4M Transistors",
+  "timingSlack": "+0.12 ns @ 1.2GHz",
+  "area": "2.42 mm²",
+  "power": "142 mW / mm²",
+  "frequency": "1.2 GHz (TSMC 7nm)"
+}

@@ -1,0 +1,7 @@
+{
+  "lutCount": "8,400 Gates",
+  "timingSlack": "+0.42 ns @ 500MHz",
+  "area": "0.08 mm²",
+  "power": "14.8 mW",
+  "frequency": "650 MHz (28nm FD-SOI)"
+}

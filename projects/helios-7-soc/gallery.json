@@ -1,0 +1,12 @@
+[
+  {
+    "title": "SoC Die Photo",
+    "desc": "Post-routing view displaying the layout of the RISC-V host and the central NPU block.",
+    "url": "https://images.unsplash.com/photo-1555664424-778a1e5e1b48?q=80&w=600&auto=format&fit=crop"
+  },
+  {
+    "title": "Systolic Array Density",
+    "desc": "PE cell density map indicating localized routing utilization on high-speed copper layers.",
+    "url": "https://images.unsplash.com/photo-1601524909162-be87252be298?q=80&w=600&auto=format&fit=crop"
+  }
+]

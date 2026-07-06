@@ -1,0 +1,7 @@
+{
+  "lutCount": "124 LUTs",
+  "timingSlack": "+12.42 ns @ 10MHz",
+  "area": "Basys 3 FPGA",
+  "power": "1.4 mW",
+  "frequency": "25 MHz (Artix-7)"
+}

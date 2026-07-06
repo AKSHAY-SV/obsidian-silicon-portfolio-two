@@ -1,0 +1,12 @@
+[
+  {
+    "id": "helios-floorplan-def",
+    "name": "Helios7_Core_Layout_v0.8.def",
+    "category": "Layouts",
+    "icon": "layers",
+    "version": "0.8.1-beta",
+    "size": "14.2 MB",
+    "status": "Restricted",
+    "fileType": "ASIC Floorplan DEF"
+  }
+]

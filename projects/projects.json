@@ -1,0 +1,181 @@
+[
+  {
+    "id": "rv32im-core",
+    "name": "RV32IM_PROCESSOR",
+    "category": "Computer Arch",
+    "tagline": "High-Performance 5-Stage Pipelined RISC-V CPU Core",
+    "description": "A fully-synthesizable, cycle-accurate implementation of the RISC-V RV32IM instruction set architecture. Features a 5-stage classic pipeline (Fetch, Decode, Execute, Memory, Write-back) with full data-forwarding, hazard detection, and a parameterizable hardware integer multiplier/divider unit.",
+    "techStack": ["SystemVerilog", "Verilator", "C++ Testbench", "FPGA (Artix-7)", "OpenSTA"],
+    "image": "https://images.unsplash.com/photo-1591453089816-0fbb971b454c?q=80&w=600&auto=format&fit=crop",
+    "difficulty": "Advanced",
+    "status": "Completed",
+    "completionDate": "2026-01",
+    "completionDisplay": "Jan 2026",
+    "primaryLanguage": "SystemVerilog",
+    "complexityScore": 92,
+    "domains": ["Computer Architecture", "RTL Design", "FPGA", "Verification"],
+    "quickTags": ["RISC-V", "5-Stage", "Bypass Matrix"],
+    "githubUrl": "https://github.com/google-deepmind/rv32im-processor",
+    "specs": [
+      { "label": "ISA Extension", "value": "RV32IM (Base Integer + M Extension)" },
+      { "label": "Pipeline Depth", "value": "5 Stages with Bypass paths" },
+      { "label": "Branch Predictor", "value": "Dynamic 2-bit BHT (94% Accuracy)" },
+      { "label": "Multiplier Unit", "value": "Pipelined Radix-4 Booth Multiplier" },
+      { "label": "L1 Cache", "value": "Direct Mapped, 4KB I-Cache / 4KB D-Cache" },
+      { "label": "Verification Suite", "value": "RISCOF (99.8% Suite Coverage)" }
+    ],
+    "files": [
+      {
+        "name": "RV32IM_Core.v",
+        "path": "cores/rv32im/RV32IM_Core.v",
+        "content": "// =================================================================\n// PROJECT: RV32IM_PROCESSOR\n// FILE: RV32IM_Core.v\n// DESCRIPTION: Main Top Module for Pipelined RISC-V 32-bit CPU\n// =================================================================\n\nmodule RV32IM_Core (\n    input  wire        clk,\n    input  wire        rst_n,\n    \n    // Instruction Memory Interface\n    output wire [31:0] imem_addr,\n    input  wire [31:0] imem_rdata,\n    \n    // Data Memory Interface\n    output wire        dmem_we,\n    output wire [31:0] dmem_addr,\n    output wire [31:0] dmem_wdata,\n    input  wire [31:0] dmem_rdata\n);\n\n    // --- PIPELINE REGISTER STAGES ---\n    reg [31:0] if_pc, id_pc, ex_pc, mem_pc, wb_pc;\n    reg [31:0] id_instr;\n    \n    // Decode Stage Signals\n    wire [4:0]  rs1 = id_instr[19:15];\n    wire [4:0]  rs2 = id_instr[24:20];\n    wire [4:0]  rd  = id_instr[11:7];\n    wire [6:0]  opcode = id_instr[6:0];\n    wire [31:0] imm = decode_imm(id_instr);\n    \n    // Forwarding logic\n    wire [1:0] forward_a, forward_b;\n    wire [31:0] src_a = (forward_a == 2'b10) ? mem_alu_result :\n                        (forward_a == 2'b01) ? wb_result : rf_rdata1;\n                        \n    // Execution Unit (ALU + Multiplier)\n    wire [31:0] alu_out;\n    wire        alu_zero;\n    \n    ALU alu_inst ( \n        .a(src_a),\n        .b(src_b_final),\n        .ctrl(alu_ctrl),\n        .out(alu_out),\n        .zero(alu_zero)\n    );\n    \n    // Instantiate Divider & Multiplier (M-Extension)\n    wire [31:0] mult_out;\n    M_Extension_Unit m_unit (\n        .clk(clk),\n        .rst_n(rst_n),\n        .rs1_val(src_a),\n        .rs2_val(src_b_final),\n        .m_op(m_ctrl),\n        .out(mult_out)\n    );\n\nendmodule",
+        "size": "4.8 KB"
+      },
+      {
+        "name": "ALU.v",
+        "path": "cores/rv32im/ALU.v",
+        "content": "// =================================================================\n// FILE: ALU.v\n// DESCRIPTION: 32-bit Arithmetic Logic Unit with zero flag detection\n// =================================================================\n\nmodule ALU (\n    input  wire [31:0] a,\n    input  wire [31:0] b,\n    input  wire [3:0]  ctrl,\n    output reg  [31:0] out,\n    output wire        zero\n);\n    assign zero = (out == 32'b0);\n\n    always @(*) begin\n        case (ctrl) \n            4'b0000: out = a + b;       // ADD\n            4'b1000: out = a - b;       // SUB\n            4'b0001: out = a << b[4:0]; // SLL\n            4'b0010: out = ($signed(a) < $signed(b)) ? 32'b1 : 32'b0; // SLT\n            4'b0100: out = a ^ b;       // XOR\n            4'b0110: out = a | b;       // OR\n            4'b0111: out = a & b;       // AND\n            default: out = 32'b0;\n        endcase\n    end\nendmodule",
+        "size": "1.2 KB"
+      }
+    ]
+  },
+  {
+    "id": "rv32im-soc-processor",
+    "name": "RV32IM SoC – 5-Stage Pipelined RISC-V Processor",
+    "category": "ASIC",
+    "tagline": "5-Stage Pipelined RISC-V Processor System on Chip (7nm FinFET)",
+    "description": "A fully integrated mixed-signal 5-stage pipelined RISC-V processor co-designed with high-efficiency accelerators, sharing an L1/L2 coherence fabric and interfacing via high-speed APB/AXI4 interconnects.",
+    "techStack": ["Chisel", "Verilog", "TSMC 7nm PDK", "Synopsys Design Compiler", "Cadence Innovus"],
+    "image": "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=600&auto=format&fit=crop",
+    "difficulty": "Advanced",
+    "status": "Completed",
+    "completionDate": "2026-05",
+    "completionDisplay": "May 2026",
+    "primaryLanguage": "Chisel",
+    "complexityScore": 98,
+    "domains": ["Computer Architecture", "RTL Design", "ASIC Design", "Physical Design"],
+    "quickTags": ["7nm FinFET", "RISC-V", "5-Stage Pipelined"],
+    "githubUrl": "https://github.com/google-deepmind/rv32im-soc-processor",
+    "specs": [
+      { "label": "Process Node", "value": "TSMC 7nm FinFET N7" },
+      { "label": "CPU Cluster", "value": "5-Stage Pipelined RV32IM Cores" },
+      { "label": "NPU Performance", "value": "4.2 TOPS @ 800MHz INT8 Matrix Engine" },
+      { "label": "Memory Host", "value": "Integrated LPDDR4/5 Physical Layer (PHY)" },
+      { "label": "Interconnect", "value": "128-bit AXI4 Non-blocking Ring Network" },
+      { "label": "Cache Hierarchy", "value": "32KB L1 + Shared 1MB L2 Cache Coherent SRAM" }
+    ],
+    "files": [
+      {
+        "name": "RV32IM_SoC_Top.v",
+        "path": "soc/rv32im/RV32IM_SoC_Top.v",
+        "content": "// =================================================================\n// PROJECT: RV32IM SoC – 5-Stage Pipelined RISC-V Processor\n// FILE: RV32IM_SoC_Top.v\n// DESCRIPTION: Top-Level ASIC Chip Envelope & Pin Mappings\n// =================================================================\n\nmodule RV32IM_SoC_Top (\n    input  wire        pad_clk_p,\n    input  wire        pad_clk_n,\n    input  wire        pad_rst_n,\n    \n    // DDR Memory PHY Pins\n    output wire [15:0] ddr_addr,\n    inout  wire [31:0] ddr_dq,\n    \n    // Peripherals (UART, I2C, JTAG)\n    input  wire        uart_rx,\n    output wire        uart_tx,\n    input  wire        jtag_tck,\n    input  wire        jtag_tms,\n    output wire        jtag_tdo\n);\n\n    // Differential Clock Buffers (ASIC Custom)\n    wire sys_clk;\n    IBUFDS clk_diff_buf (\n        .I(pad_clk_p),\n        .IB(pad_clk_n),\n        .O(sys_clk)\n    );\n\n    // Quad Core Cluster Instance\n    wire [127:0] axi_m_wdata;\n    wire [31:0]  axi_m_addr;\n    \n    CPU_Cluster_4x cores_inst (\n        .clk(sys_clk),\n        .rst_n(pad_rst_n),\n        .axi_addr(axi_m_addr),\n        .axi_wdata(axi_m_wdata)\n    );\n\n    // Systolic NPU Core Accel\n    NPU_Matrix_Engine npu_inst (\n        .clk(sys_clk),\n        .rst_n(pad_rst_n),\n        .mem_addr(axi_m_addr)\n    );\n\nendmodule",
+        "size": "6.2 KB"
+      }
+    ]
+  },
+  {
+    "id": "axi4-interconnect",
+    "name": "AXI4_CROSSBAR",
+    "category": "Computer Arch",
+    "tagline": "Fully Concurrent 4x4 non-blocking Parameterized Crossbar Switch Matrix",
+    "description": "A parameterized 4-Master to 4-Slave AXI4 Switch Core enabling fully concurrent read/write transactions, utilizing custom split-address pathways, credit-based buffer flow control, and dynamic round-robin arbitration modules.",
+    "techStack": ["SystemVerilog", "ModelSim", "SVA (Assertions)", "UVM", "FPGA (UltraScale+)"],
+    "image": "https://images.unsplash.com/photo-1555664424-778a1e5e1b48?q=80&w=600&auto=format&fit=crop",
+    "difficulty": "Advanced",
+    "status": "Completed",
+    "completionDate": "2026-03",
+    "completionDisplay": "Mar 2026",
+    "primaryLanguage": "SystemVerilog",
+    "complexityScore": 88,
+    "domains": ["Computer Architecture", "RTL Design", "ASIC Design", "Verification"],
+    "quickTags": ["AXI4", "Non-blocking Switch", "Credit-flow"],
+    "githubUrl": "https://github.com/google-deepmind/axi4-crossbar",
+    "specs": [
+      { "label": "Protocols Supported", "value": "AXI4, AXI4-Lite" },
+      { "label": "Arbitration Scheme", "value": "Weighted Round-Robin (Dynamic)" },
+      { "label": "Data Bus Width", "value": "64/128/256-bit configurable" },
+      { "label": "Address Channels", "value": "Split Address, Read-Write De-coupled" },
+      { "label": "Verification Method", "value": "UVM Agent with Scoreboards & Coverage" }
+    ],
+    "files": [
+      {
+        "name": "AXI4_Crossbar.sv",
+        "path": "interconnects/AXI4_Crossbar.sv",
+        "content": "// =================================================================\n// PROJECT: AXI4_INTERCONNECT\n// FILE: AXI4_Crossbar.sv\n// DESCRIPTION: Non-Blocking Crossbar Router module\n// =================================================================\n\nmodule AXI4_Crossbar #(\n    parameter int NUM_M = 4,\n    parameter int NUM_S = 4,\n    parameter int ADDR_WIDTH = 32,\n    parameter int DATA_WIDTH = 64\n) (\n    input  wire clk,\n    input  wire rst_n,\n    \n    // Master Interfaces & Slave Interfaces signals...\n    input  wire [NUM_M-1:0] m_awvalid,\n    output wire [NUM_M-1:0] m_awready,\n    input  wire [NUM_M*ADDR_WIDTH-1:0] m_awaddr,\n    \n    output wire [NUM_S-1:0] s_awvalid,\n    input  wire [NUM_S-1:0] s_awready,\n    output wire [NUM_S*ADDR_WIDTH-1:0] s_awaddr\n);\n    // Crossbar concurrent switch logic...\nendmodule",
+        "size": "11.4 KB"
+      }
+    ]
+  },
+  {
+    "id": "l2-cache-controller",
+    "name": "L2_CACHE_COHERENT",
+    "category": "Verification",
+    "tagline": "Snoop-Enabled Coherence Directory with Multi-core Lock Synchronization",
+    "description": "A 4-way set associative L2 write-back cache, implementing a pseudo-LRU replacement policy, MESI cache coherence protocol, and complete formal coverage verification mapping complex CPU core coherence matrices.",
+    "techStack": ["SystemVerilog", "SymbiYosys", "SystemVerilog Assertions", "ModelSim"],
+    "image": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=600&auto=format&fit=crop",
+    "difficulty": "Advanced",
+    "status": "Completed",
+    "completionDate": "2025-11",
+    "completionDisplay": "Nov 2025",
+    "primaryLanguage": "SystemVerilog",
+    "complexityScore": 85,
+    "domains": ["Computer Architecture", "RTL Design", "Research", "Verification"],
+    "quickTags": ["MESI Coherence", "Pseudo-LRU", "Snoop Buffer"],
+    "githubUrl": "https://github.com/google-deepmind/l2-cache-system",
+    "specs": [
+      { "label": "Associativity", "value": "4-Way Set Associative" },
+      { "label": "Coherency Protocol", "value": "MESI (Modified, Exclusive, Shared, Invalid)" },
+      { "label": "Line Replacement", "value": "Pseudo-LRU (Tree-based)" },
+      { "label": "Write Policy", "value": "Write-Back with Write-Allocate" }
+    ],
+    "files": [
+      {
+        "name": "L2_Controller.sv",
+        "path": "cache/L2_Controller.sv",
+        "content": "// =================================================================\n// PROJECT: L2_CACHE_SYSTEM\n// FILE: L2_Controller.sv\n// DESCRIPTION: MESI Coherent State Machine and Snooping Logic\n// =================================================================\n\nmodule L2_Controller (\n    input  wire clk,\n    input  wire rst_n,\n    \n    // CPU & Memory Bus Coherence ports...\n    input  wire        cpu_req,\n    input  wire [31:0] cpu_addr,\n    output reg         cpu_ready,\n    \n    input  wire        snoop_req,\n    input  wire [31:0] snoop_addr\n);\n    // MESI Coherence State Transitions\nendmodule",
+        "size": "9.3 KB"
+      }
+    ]
+  },
+  {
+    "id": "eight-bit-computer",
+    "name": "EIGHT_BIT_COMPUTER",
+    "category": "FPGA",
+    "tagline": "FPGA-Mapped 8-Bit von Neumann Microprogrammed Architecture",
+    "description": "A complete custom accumulator-based 8-bit computer implemented in synthesizable Verilog. Follows a classical von Neumann architecture, coordinated over an 8-bit shared tri-state bus. Features a custom 16-instruction ISA microsequenced by a control unit state machine and verified cycle-by-cycle inside Xilinx Vivado XSim.",
+    "techStack": ["Verilog", "Vivado XSim", "Logic Analyzer Probing", "Digilent Basys 3", "Python Modeling"],
+    "image": "https://images.unsplash.com/photo-1601524909162-be87252be298?q=80&w=600&auto=format&fit=crop",
+    "difficulty": "Intermediate",
+    "status": "In Progress",
+    "completionDate": "2026-06",
+    "completionDisplay": "Jun 2026",
+    "primaryLanguage": "Verilog",
+    "complexityScore": 65,
+    "domains": ["Computer Architecture", "RTL Design", "FPGA", "Embedded Systems"],
+    "quickTags": ["von Neumann", "8-bit Bus", "Microprogrammed CU"],
+    "githubUrl": "https://github.com/google-deepmind/8-bit-computer",
+    "specs": [
+      { "label": "Architecture Type", "value": "Accumulator-based von Neumann" },
+      { "label": "Data Width", "value": "8-bit Word" },
+      { "label": "Address Space", "value": "4-bit (16 addressed Bytes)" },
+      { "label": "Instruction Set", "value": "16 core operations (Custom ISA)" },
+      { "label": "Bus Structure", "value": "8-bit shared tri-state parallel" },
+      { "label": "Verification Tools", "value": "Xilinx Vivado XSim RTL Simulator" }
+    ],
+    "files": [
+      {
+        "name": "complete.v",
+        "path": "cores/8bit/complete.v",
+        "content": "// =================================================================\n// PROJECT: 8-BIT_COMPUTER_DESIGN\n// FILE: complete.v\n// DESCRIPTION: Top-level module coordinating upper/lower blocks\n// =================================================================\n\nmodule complete (\n    input wire clk,\n    input wire rst_n,\n    output wire [7:0] out_display\n);\n\n    // --- SHARED TRI-STATE BUS ---\n    wire [7:0] bus;\n\n    // --- CONTROL BUS SIGNALS ---\n    wire [15:0] ctrl;\n    wire [3:0] pc_val, mar_val;\n    wire [7:0] ram_val, ir_val, acc_val, regb_val, alu_val;\n    wire [2:0] flags; // [Carry, Zero, Negative]\n\n    // Upper Layer Instance (Registers & PC)\n    upper upper_inst (\n        .clk(clk),\n        .rst_n(rst_n),\n        .bus(bus),\n        .ctrl(ctrl),\n        .pc_out(pc_val),\n        .mar_out(mar_val),\n        .ir_out(ir_val),\n        .acc_out(acc_val)\n    );\n\n    // Lower Layer Instance (ALU, Reg B, Flags)\n    lower lower_inst (\n        .clk(clk),\n        .rst_n(rst_n),\n        .bus(bus),\n        .ctrl(ctrl),\n        .acc_in(acc_val),\n        .regb_out(regb_val),\n        .alu_out(alu_val),\n        .flags_out(flags)\n    );\n\n    // Control Unit (Microprogrammed State Machine)\n    control_unit cu_inst (\n        .clk(clk),\n        .rst_n(rst_n),\n        .opcode(ir_val[7:4]),\n        .flags(flags),\n        .ctrl(ctrl)\n    );\n\n    // Output Latch Register\n    OutputRegister out_reg (\n        .clk(clk),\n        .load(ctrl[12]), // out_load\n        .in_val(bus),\n        .out_val(out_display)\n    );\n\nendmodule",
+        "size": "1.9 KB"
+      },
+      {
+        "name": "control_unit.v",
+        "path": "cores/8bit/control_unit.v",
+        "content": "// =================================================================\n// PROJECT: 8-BIT_COMPUTER_DESIGN\n// FILE: control_unit.v\n// DESCRIPTION: Microsequencer decoder generating control signals\n// =================================================================\n\nmodule control_unit (\n    input wire clk,\n    input wire rst_n,\n    input wire [3:0] opcode,\n    input wire [2:0] flags, // [Carry, Zero, Negative]\n    output reg [15:0] ctrl\n);\n\n    reg [2:0] t_state;\n\n    // T-States Sequencer (6-state clock machine)\n    always @(posedge clk or negedge rst_n) begin\n        if (!rst_n) begin\n            t_state <= 3'd1;\n        end else begin\n            if (t_state == 3'd6) \n                t_state <= 3'd1;\n            else \n                t_state <= t_state + 1'b1;\n        end\n    end\n\n    // Control Signal Bitmaps:\n    // ctrl[0]  = pc_oe,     ctrl[1]  = pc_count\n    // ctrl[2]  = mar_load,   ctrl[3]  = ram_oe\n    // ctrl[4]  = ram_we,     ctrl[5]  = ir_load\n    // ctrl[6]  = ir_oe,      ctrl[7]  = acc_load\n    // ctrl[8]  = acc_oe,     ctrl[9]  = regb_load\n    // ctrl[10] = alu_oe,     ctrl[11] = alu_sub\n    // ctrl[12] = out_load,   ctrl[13] = flags_load\n\n    always @(*) begin\n        ctrl = 16'b0;\n        case (t_state) \n            // Fetch cycle\n            3'd1: ctrl[0] = 1'b1; ctrl[2] = 1'b1; // T1: MAR <- PC\n            3'd2: ctrl[1] = 1'b1;                 // T2: PC <- PC + 1\n            3'd3: ctrl[3] = 1'b1; ctrl[5] = 1'b1; // T3: IR <- RAM[MAR]\n            \n            // Execute cycle (Opcode Decodes)\n            default: begin\n                case (opcode)\n                    4'b0000: begin // LDA\n                        if (t_state == 3'd4) begin ctrl[6] = 1'b1; ctrl[2] = 1'b1; end // MAR <- IR[3:0]\n                        if (t_state == 3'd5) begin ctrl[3] = 1'b1; ctrl[7] = 1'b1; end // Acc <- RAM[MAR]\n                    end\n                    4'b0010: begin // ADD\n                        if (t_state == 3'd4) begin ctrl[6] = 1'b1; ctrl[2] = 1'b1; end // MAR <- IR[3:0]\n                        if (t_state == 3'd5) begin ctrl[3] = 1'b1; ctrl[9] = 1'b1; end // Reg B <- RAM[MAR]\n                        if (t_state == 3'd6) begin ctrl[10] = 1'b1; ctrl[7] = 1'b1; ctrl[13] = 1'b1; end // Acc <- Acc + B, Flags Load\n                    end\n                    4'b0011: begin // SUB\n                        if (t_state == 3'd4) begin ctrl[6] = 1'b1; ctrl[2] = 1'b1; end\n                        if (t_state == 3'd5) begin ctrl[3] = 1'b1; ctrl[9] = 1'b1; end\n                        if (t_state == 3'd6) begin ctrl[10] = 1'b1; ctrl[11] = 1'b1; ctrl[7] = 1'b1; ctrl[13] = 1'b1; end // Acc <- Acc - B, sub bit, Flags Load\n                    end\n                    4'b1110: begin // OUT\n                        if (t_state == 3'd4) begin ctrl[8] = 1'b1; ctrl[12] = 1'b1; end // OutReg <- Acc\n                    end\n                    default: ctrl = 16'b0;\n                endcase\n            end\n        endcase\n    end\n\nendmodule",
+        "size": "2.5 KB"
+      }
+    ]
+  }
+]

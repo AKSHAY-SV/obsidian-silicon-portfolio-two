@@ -1,0 +1,7 @@
+{
+  "lutCount": "4,280 LUTs",
+  "timingSlack": "+1.42 ns @ 150MHz",
+  "area": "0.18 mm²",
+  "power": "32.4 mW",
+  "frequency": "180 MHz (TSMC 65nm)"
+}
