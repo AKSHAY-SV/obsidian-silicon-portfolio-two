@@ -6,9 +6,9 @@ import {
   ArrowLeft, Cpu, Layers, ShieldCheck, Microscope, FileText,
   Sliders, Activity, Image as ImageIcon, BookOpen, Clock, PlayCircle,
   Eye, GitBranch, Grid, Zap, Ruler, Lock, Unlock, Download,
-  CheckCircle, AlertTriangle, HelpCircle, Terminal, RefreshCw, ZoomIn, ZoomOut, Maximize2
+  CheckCircle, AlertTriangle, HelpCircle, Terminal, RefreshCw, ZoomIn, ZoomOut, Maximize2,
+  Waves, X, Move
 } from 'lucide-react';
-import VerificationWaveforms from './verification/VerificationWaveforms';
 
 interface ProjectDetailPageProps {
   project: ProjectDetail;
@@ -38,6 +38,10 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
   const [selectedTiming, setSelectedTiming] = useState<string | null>(null);
   const [selectedFloorplan, setSelectedFloorplan] = useState<string | null>(null);
   const [selectedLayout, setSelectedLayout] = useState<string | null>(null);
+
+  // Verification waveforms gallery state
+  const [activeWaveformIndex, setActiveWaveformIndex] = useState(0);
+  const [isFullscreenWaveform, setIsFullscreenWaveform] = useState(false);
 
   useEffect(() => {
     const fetchAssets = async () => {
@@ -201,6 +205,33 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
     if (!isValidated || !allowedProjects) return false;
     if (allowedProjects.length === 0) return true; // Empty means all
     return activeAsset ? allowedProjects.includes(activeAsset.id) : false;
+  };
+
+  const simulationWaveforms = discoveredAssets["simulation"] || [];
+
+  const getCaptionFromFilename = (filename: string): string => {
+    if (!filename) return "";
+    const nameWithoutExt = filename.replace(/\.[^/.]+$/, "");
+    const abbreviations: Record<string, string> = {
+      "apb": "APB",
+      "cpu": "CPU",
+      "uart": "UART",
+      "gpio": "GPIO",
+      "plic": "PLIC",
+      "spi": "SPI",
+      "sram": "SRAM",
+      "soc": "SoC"
+    };
+
+    const words = nameWithoutExt.split("-").map(word => {
+      const lower = word.toLowerCase();
+      if (abbreviations[lower]) {
+        return abbreviations[lower];
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    });
+
+    return `${words.join(" ")} Functional Verification`;
   };
 
   return (
@@ -445,55 +476,132 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
           <Section index="05" title="Simulation Outputs &amp; Waveforms" icon={<PlayCircle className="h-4 w-4" />}>
             <div className="space-y-6">
               <p className="font-sans text-sm text-slate-300 leading-relaxed">
-                Cycle-accurate execution validation inside hardware simulation benches. Demonstrates complete instruction loops and data integrity checks.
+                Hardware-level timing trace outputs and logic verification waveforms captured during simulation cycles of SoC sub-modules. Click any waveform to enter fullscreen inspection mode.
               </p>
 
-              {/* Dynamic asset picker */}
-              {discoveredAssets["simulation"] && discoveredAssets["simulation"].length > 0 && (
-                <div className="p-3 bg-[#a78bfa]/5 border border-[#a78bfa]/10 rounded-lg flex flex-col gap-1.5 font-mono text-[10px]">
-                  <span className="text-[#a78bfa] uppercase tracking-wider font-bold">// DISCOVERED SIMULATION ASSETS ({discoveredAssets["simulation"].length}):</span>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => setSelectedSimulation(null)}
-                      className={`px-2 py-0.5 rounded border text-left transition-all flex items-center gap-1.5 cursor-pointer ${selectedSimulation === null ? 'bg-[#a78bfa]/20 border-[#a78bfa]/40 text-white font-bold' : 'bg-[#040406]/60 border-slate-800 text-slate-400 hover:text-white'}`}
-                    >
-                      <PlayCircle className="h-3 w-3" />
-                      <span>Interactive Waveforms Emulator</span>
-                    </button>
-                    {discoveredAssets["simulation"].map((file) => (
-                      <button
-                        key={file.name}
-                        onClick={() => setSelectedSimulation(file.url)}
-                        className={`px-2 py-0.5 rounded border text-left transition-all flex items-center gap-1.5 cursor-pointer ${selectedSimulation === file.url ? 'bg-[#a78bfa]/20 border-[#a78bfa]/40 text-white font-bold' : 'bg-[#040406]/60 border-slate-800 text-slate-400 hover:text-white'}`}
-                      >
-                        <ImageIcon className="h-3 w-3" />
-                        <span>{file.name}</span>
-                        <span className="text-slate-600 font-bold">({file.size})</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Render dynamic image if selected, otherwise deep waves accordion or fallback */}
-              {selectedSimulation ? (
-                <EngineeringViewer
-                  src={selectedSimulation}
-                  alt={`${project.name} — Timing Simulation Waveforms`}
-                  fallbackType="waveform"
-                  projectId={project.id}
-                />
-              ) : FIVE_STAGE_SOC_SLUGS.has(slug) ? (
-                <div className="rounded-lg border border-[rgba(255,255,255,0.04)] bg-[#040406]/30 p-4">
-                  <VerificationWaveforms slug={slug} />
+              {simulationWaveforms.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 px-6 rounded-xl border border-dashed border-slate-800 bg-[#040406]/30 text-center space-y-3">
+                  <Waves className="h-8 w-8 text-slate-600 animate-pulse" />
+                  <p className="font-mono text-xs uppercase tracking-widest text-slate-500">
+                    Functional verification waveforms will appear here.
+                  </p>
                 </div>
               ) : (
-                <EngineeringViewer
-                  src={`/projects/${slug}/simulation-waveform.png`}
-                  alt={`${project.name} — Timing Simulation Waveforms`}
-                  fallbackType="waveform"
-                  projectId={project.id}
-                />
+                <div className="space-y-6">
+                  {/* Large Preview Container */}
+                  <div className="relative group rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#040406]/90 overflow-hidden flex flex-col">
+                    {/* Header Bar */}
+                    <div className="px-5 py-3 border-b border-[rgba(255,255,255,0.04)] bg-[#08080c] flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="font-mono text-[10px] text-slate-400 uppercase tracking-wider">
+                          Active Trace: {simulationWaveforms[activeWaveformIndex]?.name}
+                        </span>
+                      </div>
+                      <span className="font-mono text-[10px] text-slate-500">
+                        [{activeWaveformIndex + 1} / {simulationWaveforms.length}] • {simulationWaveforms[activeWaveformIndex]?.size}
+                      </span>
+                    </div>
+
+                    {/* Image Area */}
+                    <div className="relative min-h-[320px] sm:min-h-[420px] max-h-[500px] flex items-center justify-center p-6 bg-[#020204]">
+                      {/* Left cycling arrow */}
+                      <button
+                        onClick={() => setActiveWaveformIndex(prev => (prev - 1 + simulationWaveforms.length) % simulationWaveforms.length)}
+                        className="absolute left-4 z-10 p-2.5 rounded-full border border-slate-800 bg-black/60 text-slate-400 hover:text-white hover:border-[#a78bfa]/50 hover:bg-[#a78bfa]/10 transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        title="Previous Waveform"
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                      </button>
+
+                      {/* Display Image */}
+                      <div
+                        onClick={() => setIsFullscreenWaveform(true)}
+                        className="w-full h-full flex items-center justify-center cursor-zoom-in relative max-h-[380px] sm:max-h-[400px]"
+                      >
+                        <img
+                          src={simulationWaveforms[activeWaveformIndex]?.url}
+                          alt={getCaptionFromFilename(simulationWaveforms[activeWaveformIndex]?.name)}
+                          referrerPolicy="no-referrer"
+                          className="max-w-full max-h-full object-contain hover:scale-[1.01] transition-transform duration-300"
+                        />
+                        
+                        {/* Hover Overlay Zoom Prompt */}
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                          <div className="px-3.5 py-2 rounded-lg bg-black/80 border border-slate-800 text-white font-mono text-[10px] uppercase tracking-wider flex items-center gap-2 shadow-xl">
+                            <Maximize2 className="h-3 w-3 text-[#a78bfa]" />
+                            <span>Click to Enlarge</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right cycling arrow */}
+                      <button
+                        onClick={() => setActiveWaveformIndex(prev => (prev + 1) % simulationWaveforms.length)}
+                        className="absolute right-4 z-10 p-2.5 rounded-full border border-slate-800 bg-black/60 text-slate-400 hover:text-white hover:border-[#a78bfa]/50 hover:bg-[#a78bfa]/10 transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        title="Next Waveform"
+                      >
+                        <ArrowLeft className="h-4 w-4 rotate-180" />
+                      </button>
+                    </div>
+
+                    {/* Footer Caption */}
+                    <div className="px-5 py-4 border-t border-[rgba(255,255,255,0.04)] bg-[#08080c] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="space-y-1">
+                        <span className="font-mono text-[9px] uppercase tracking-widest text-[#a78bfa] block">
+                          // Capture Legend
+                        </span>
+                        <h4 className="font-sans text-sm sm:text-base font-black text-white uppercase tracking-wide">
+                          {getCaptionFromFilename(simulationWaveforms[activeWaveformIndex]?.name)}
+                        </h4>
+                      </div>
+                      <button
+                        onClick={() => setIsFullscreenWaveform(true)}
+                        className="font-mono text-[10px] uppercase tracking-wider text-[#a78bfa] hover:text-white border border-[#a78bfa]/20 hover:border-[#a78bfa]/65 bg-[#a78bfa]/5 hover:bg-[#a78bfa]/15 rounded-lg px-4 py-2 transition-all cursor-pointer flex items-center gap-2 self-start sm:self-auto"
+                      >
+                        <Maximize2 className="h-3 w-3" />
+                        <span>Enlarge Capture</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Thumbnail Selector Grid */}
+                  <div className="space-y-2">
+                    <span className="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                      // Dynamic Waveform Gallery ({simulationWaveforms.length})
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                      {simulationWaveforms.map((file, idx) => {
+                        const isActive = idx === activeWaveformIndex;
+                        return (
+                          <button
+                            key={file.name}
+                            onClick={() => setActiveWaveformIndex(idx)}
+                            className={`p-2.5 rounded-xl border text-left transition-all flex flex-col gap-2 cursor-pointer group hover:bg-[#0c0c12] ${isActive ? 'bg-[#0c0c12] border-[#a78bfa]/50 shadow-lg shadow-[#a78bfa]/5' : 'bg-[#040406]/60 border-slate-900 hover:border-slate-700'}`}
+                          >
+                            {/* Tiny Image Thumbnail */}
+                            <div className="w-full h-16 rounded bg-black flex items-center justify-center overflow-hidden border border-[rgba(255,255,255,0.02)]">
+                              <img
+                                src={file.url}
+                                alt={getCaptionFromFilename(file.name)}
+                                referrerPolicy="no-referrer"
+                                className="max-w-full max-h-full object-contain opacity-50 group-hover:opacity-100 transition-opacity"
+                              />
+                            </div>
+                            <div className="space-y-0.5 truncate w-full">
+                              <span className={`font-sans text-[10px] font-bold tracking-wide block truncate transition-colors ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}>
+                                {getCaptionFromFilename(file.name).replace(" Functional Verification", "")}
+                              </span>
+                              <span className="font-mono text-[9px] text-slate-600 block">
+                                {file.size}
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           </Section>
@@ -881,8 +989,226 @@ make -C obj_dir -f Vcore.mk
             // RETURN_TO_PORTFOLIO
           </button>
         </motion.div>
+
+        <AnimatePresence>
+          {isFullscreenWaveform && (
+            <FullscreenGalleryViewer
+              images={simulationWaveforms}
+              activeIndex={activeWaveformIndex}
+              onClose={() => setIsFullscreenWaveform(false)}
+              onPrev={() => setActiveWaveformIndex(idx => (idx - 1 + simulationWaveforms.length) % simulationWaveforms.length)}
+              onNext={() => setActiveWaveformIndex(idx => (idx + 1) % simulationWaveforms.length)}
+              getCaption={getCaptionFromFilename}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </div>
+  );
+}
+
+// -----------------------------------------------------------------------------
+// Fullscreen Waveform Gallery Viewer Component
+// -----------------------------------------------------------------------------
+function FullscreenGalleryViewer({
+  images,
+  activeIndex,
+  onClose,
+  onPrev,
+  onNext,
+  getCaption
+}: {
+  images: Array<{ name: string; url: string; size: string }>;
+  activeIndex: number;
+  onClose: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+  getCaption: (name: string) => string;
+}) {
+  const [scale, setScale] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const isDragging = React.useRef(false);
+  const start = React.useRef({ x: 0, y: 0, ox: 0, oy: 0 });
+
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowLeft') {
+        onPrev();
+        reset();
+      }
+      if (e.key === 'ArrowRight') {
+        onNext();
+        reset();
+      }
+      if (e.key === '+' || e.key === '=') setScale((s) => Math.min(s + 0.25, 6));
+      if (e.key === '-' || e.key === '_') setScale((s) => Math.max(s - 0.25, 0.25));
+      if (e.key === '0') reset();
+    };
+    window.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [onClose, onPrev, onNext]);
+
+  const reset = () => {
+    setScale(1);
+    setOffset({ x: 0, y: 0 });
+  };
+
+  const current = images[activeIndex];
+  if (!current) return null;
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.15 : 0.15;
+    setScale((s) => Math.min(Math.max(s + delta, 0.25), 6));
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (scale <= 1) return;
+    isDragging.current = true;
+    start.current = { x: e.clientX, y: e.clientY, ox: offset.x, oy: offset.y };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current) return;
+    setOffset({
+      x: start.current.ox + (e.clientX - start.current.x),
+      y: start.current.oy + (e.clientY - start.current.y),
+    });
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      className="fixed inset-0 z-[100] bg-[#050508]/98 backdrop-blur-md flex flex-col"
+      onWheel={handleWheel}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={() => { isDragging.current = false; }}
+      onMouseLeave={() => { isDragging.current = false; }}
+    >
+      {/* Header toolbar */}
+      <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-[rgba(255,255,255,0.06)] bg-[#0a0a0e]/90">
+        <div className="space-y-0.5">
+          <span className="font-mono text-[9px] uppercase tracking-widest text-[#a78bfa] block">
+            // Fullscreen Verification Waveform Viewer
+          </span>
+          <span className="font-sans text-sm font-black text-white uppercase tracking-wide">
+            {getCaption(current.name)}
+          </span>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {/* Zoom Level indicator and buttons */}
+          <button
+            onClick={() => setScale(s => Math.max(s - 0.25, 0.25))}
+            className="h-8 w-8 flex items-center justify-center rounded-md border border-[rgba(255,255,255,0.06)] bg-[#121218] text-slate-300 hover:text-white hover:border-[#a78bfa]/40 hover:bg-[#1a1a20] transition-colors cursor-pointer"
+            title="Zoom Out"
+          >
+            <ZoomOut className="h-4 w-4" />
+          </button>
+          <span className="font-mono text-xs text-slate-400 w-16 text-center select-none">
+            {(scale * 100).toFixed(0)}%
+          </span>
+          <button
+            onClick={() => setScale(s => Math.min(s + 0.25, 6))}
+            className="h-8 w-8 flex items-center justify-center rounded-md border border-[rgba(255,255,255,0.06)] bg-[#121218] text-slate-300 hover:text-white hover:border-[#a78bfa]/40 hover:bg-[#1a1a20] transition-colors cursor-pointer"
+            title="Zoom In"
+          >
+            <ZoomIn className="h-4 w-4" />
+          </button>
+          <button
+            onClick={reset}
+            className="h-8 w-8 flex items-center justify-center rounded-md border border-[rgba(255,255,255,0.06)] bg-[#121218] text-slate-300 hover:text-white hover:border-[#a78bfa]/40 hover:bg-[#1a1a20] transition-colors cursor-pointer"
+            title="Reset Zoom"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
+
+          <span className="h-6 w-[1px] bg-slate-800 mx-1" />
+
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="h-8 w-8 flex items-center justify-center rounded-md border border-[rgba(255,255,255,0.06)] bg-[#121218] text-slate-300 hover:text-white hover:border-red-500/50 hover:bg-red-500/10 transition-colors cursor-pointer"
+            title="Close (ESC)"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Main image canvas with Left/Right arrows */}
+      <div className="flex-1 relative flex items-center justify-center overflow-hidden select-none">
+        {/* Left Arrow */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onPrev();
+            reset();
+          }}
+          className="absolute left-6 z-10 p-4 rounded-full border border-slate-800 bg-[#0a0a0f]/80 text-slate-300 hover:text-white hover:border-[#a78bfa]/50 hover:bg-[#a78bfa]/10 transition-all cursor-pointer"
+          title="Previous (ArrowLeft)"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+
+        {/* Scalable, draggable Image */}
+        <div
+          className="w-full h-full flex items-center justify-center"
+          style={{ cursor: scale > 1 ? (isDragging.current ? 'grabbing' : 'grab') : 'default' }}
+        >
+          <img
+            src={current.url}
+            alt={getCaption(current.name)}
+            draggable={false}
+            style={{
+              transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+              transformOrigin: 'center center',
+              transition: isDragging.current ? 'none' : 'transform 0.15s ease-out',
+              maxWidth: '85%',
+              maxHeight: '85%',
+            }}
+            className="object-contain pointer-events-none"
+          />
+        </div>
+
+        {/* Right Arrow */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onNext();
+            reset();
+          }}
+          className="absolute right-6 z-10 p-4 rounded-full border border-slate-800 bg-[#0a0a0f]/80 text-slate-300 hover:text-white hover:border-[#a78bfa]/50 hover:bg-[#a78bfa]/10 transition-all cursor-pointer"
+          title="Next (ArrowRight)"
+        >
+          <ArrowLeft className="h-5 w-5 rotate-180" />
+        </button>
+      </div>
+
+      {/* Footer controls / info */}
+      <div className="px-6 py-4 border-t border-[rgba(255,255,255,0.05)] bg-[#0a0a0e]/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 font-mono text-[10px] uppercase tracking-widest">
+        <div className="flex items-center gap-2">
+          <span>Waveform {activeIndex + 1} of {images.length}</span>
+          <span className="text-slate-800">•</span>
+          <span className="text-slate-400">{current.size}</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1.5"><Move className="h-3 w-3" /> Drag to Pan</span>
+          <span>Scroll to Zoom</span>
+          <span>Arrows to Navigate</span>
+        </div>
+      </div>
+    </motion.div>
   );
 }
 
