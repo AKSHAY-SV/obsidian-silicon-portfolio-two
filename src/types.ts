@@ -91,6 +91,13 @@ export interface ProjectDetail {
   waveforms: string;
   diagram: string;
   futureImprovements: string;
+  designObjectives?: string[];
+  features?: string[];
+  rtlDiagrams?: string;
+  timingReports?: string;
+  floorplanImages?: string[];
+  layoutImages?: string[];
+  gdsImages?: string[];
 }
 
 export type NavTab = 

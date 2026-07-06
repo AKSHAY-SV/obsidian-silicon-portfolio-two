@@ -15,7 +15,6 @@ import {
  *  3. Design Flow
  *  4. Tools & Technologies
  *  5. Verification Methodology
- *  6. Research Interests
  */
 export default function About() {
   const container = {
@@ -188,38 +187,7 @@ export default function About() {
     },
   ];
 
-  const researchInterests = [
-    {
-      icon: <Cpu className="h-4 w-4" />,
-      title: 'Out-of-Order & Superscalar Cores',
-      body: 'Register renaming, reorder buffers, and issue queues on open-ISA RISC-V pipelines.',
-    },
-    {
-      icon: <Waves className="h-4 w-4" />,
-      title: 'Cache Coherence & NoC Fabrics',
-      body: 'Directory-based coherence, non-blocking L2/L3, and mesh interconnect topologies.',
-    },
-    {
-      icon: <LineChart className="h-4 w-4" />,
-      title: 'Low-Power Physical Design',
-      body: 'Power gating, multi-Vt libraries, and IR-drop-aware placement on advanced nodes.',
-    },
-    {
-      icon: <Binary className="h-4 w-4" />,
-      title: 'Hardware Security',
-      body: 'Side-channel-resistant crypto blocks, secure boot, and trusted execution primitives.',
-    },
-    {
-      icon: <Activity className="h-4 w-4" />,
-      title: 'Open-Source Silicon',
-      body: 'End-to-end open-source flows: OpenLane, SkyWater PDK, and community IP hardening.',
-    },
-    {
-      icon: <Compass className="h-4 w-4" />,
-      title: 'ML-Assisted EDA',
-      body: 'Data-driven floorplanning, placement suggestions, and timing prediction for iterative flows.',
-    },
-  ];
+
 
   return (
     <div className="py-16 text-slate-100 overflow-hidden" id="about-page">
@@ -389,29 +357,7 @@ export default function About() {
           </div>
         </motion.section>
 
-        {/* 6. Research Interests */}
-        <motion.section variants={item} className="space-y-6 pb-4" id="research-interests">
-          <SectionHeader index="06" title="Research Interests" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {researchInterests.map((r) => (
-              <div
-                key={r.title}
-                data-testid={`research-${r.title.toLowerCase().replace(/\s+/g, '-')}`}
-                className="flex gap-4 rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#0c0c0f] p-5 hover:border-[#a78bfa]/30 transition-colors"
-              >
-                <div className="shrink-0 h-9 w-9 rounded-lg border border-[#a78bfa]/25 bg-[#a78bfa]/10 flex items-center justify-center text-[#a78bfa]">
-                  {r.icon}
-                </div>
-                <div className="space-y-1">
-                  <h4 className="font-mono text-sm font-bold uppercase tracking-wide text-white">
-                    {r.title}
-                  </h4>
-                  <p className="font-sans text-xs text-slate-400 leading-relaxed">{r.body}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.section>
+
       </motion.div>
     </div>
   );

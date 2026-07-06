@@ -2,8 +2,8 @@ import { Project, TimelineStage, CommitLog, DownloadAsset } from './types';
 
 export const PROJECTS: Project[] = [
   {
-    id: 'rv32im-core',
-    name: 'RV32IM_PROCESSOR',
+    id: '5-stage-pipeline-riscv',
+    name: '5-Stage Pipeline RISC-V Processor',
     category: 'Computer Arch',
     tagline: 'High-Performance 5-Stage Pipelined RISC-V CPU Core',
     description: 'A fully-synthesizable, cycle-accurate implementation of the RISC-V RV32IM instruction set architecture. Features a 5-stage classic pipeline (Fetch, Decode, Execute, Memory, Write-back) with full data-forwarding, hazard detection, and a parameterizable hardware integer multiplier/divider unit.',
@@ -39,7 +39,7 @@ export const PROJECTS: Project[] = [
         name: 'RV32IM_Core.v',
         path: 'cores/rv32im/RV32IM_Core.v',
         content: `// =================================================================
-// PROJECT: RV32IM_PROCESSOR
+// PROJECT: 5-Stage Pipeline RISC-V Processor
 // FILE: RV32IM_Core.v
 // DESCRIPTION: Main Top Module for Pipelined RISC-V 32-bit CPU
 // =================================================================
@@ -146,8 +146,8 @@ always @(*) begin
 end`
   },
   {
-    id: 'rv32im-soc-processor',
-    name: 'RV32IM SoC – 5-Stage Pipelined RISC-V Processor',
+    id: '5-stage-soc',
+    name: '5-Stage SoC with Custom RISC-V Processor',
     category: 'ASIC',
     tagline: '5-Stage Pipelined RISC-V Processor System on Chip (7nm FinFET)',
     description: 'A fully integrated mixed-signal 5-stage pipelined RISC-V processor co-designed with high-efficiency accelerators, sharing an L1/L2 coherence fabric and interfacing via high-speed APB/AXI4 interconnects.',
@@ -183,7 +183,7 @@ end`
         name: 'RV32IM_SoC_Top.v',
         path: 'soc/rv32im/RV32IM_SoC_Top.v',
         content: `// =================================================================
-// PROJECT: RV32IM SoC – 5-Stage Pipelined RISC-V Processor
+// PROJECT: 5-Stage SoC with Custom RISC-V Processor
 // FILE: RV32IM_SoC_Top.v
 // DESCRIPTION: Top-Level ASIC Chip Envelope & Pin Mappings
 // =================================================================
@@ -239,142 +239,6 @@ endmodule`,
 assign axi_awburst = 2'b01; // INCR burst type
 assign axi_awsize  = 3'b100; // 128-bit beat transfer widths
 assign axi_awlen   = 8'h0F;  // 16 burst beats per cycle transaction`
-  },
-  {
-    id: 'axi4-interconnect',
-    name: 'AXI4_CROSSBAR',
-    category: 'Computer Arch',
-    tagline: 'High-Throughput Non-Blocking AXI4 Crossbar Interconnect',
-    description: 'A parameterized 4-Master to 4-Slave AXI4 Switch Core enabling fully concurrent read/write transactions, utilizing custom split-address pathways, credit-based buffer flow control, and dynamic round-robin arbitration modules.',
-    techStack: ['SystemVerilog', 'ModelSim', 'SVA (Assertions)', 'UVM', 'FPGA (UltraScale+)'],
-    image: 'https://images.unsplash.com/photo-1555664424-778a1e5e1b48?q=80&w=600&auto=format&fit=crop',
-    metrics: {
-      lutCount: '8,450 LUTs',
-      timingSlack: '+2.10 ns @ 250MHz',
-      area: '0.09 mm²',
-      power: '18.2 mW',
-      frequency: '350 MHz (TSMC 65nm)'
-    },
-    specs: [
-      { label: 'Protocols Supported', value: 'AXI4, AXI4-Lite' },
-      { label: 'Arbitration Scheme', value: 'Weighted Round-Robin (Dynamic)' },
-      { label: 'Data Bus Width', value: '64/128/256-bit configurable' },
-      { label: 'Address Channels', value: 'Split Address, Read-Write De-coupled' },
-      { label: 'Verification Method', value: 'UVM Agent with Scoreboards & Coverage' }
-    ],
-    challenges: [
-      {
-        problem: 'HoL (Head-of-Line) Blocking occurred on Slow Peripheral channels, stalling fast memory transactions during overlapping burst operations.',
-        solution: 'Designed and implemented Out-of-Order Transaction ID routing, isolating traffic lanes and allowing non-blocking command pipelines.'
-      }
-    ],
-    files: [
-      {
-        name: 'AXI4_Crossbar.sv',
-        path: 'interconnects/AXI4_Crossbar.sv',
-        content: `// Non-Blocking Crossbar Router module`,
-        size: '11.4 KB'
-      }
-    ],
-    codeSnippet: `// Out-of-Order Transaction Routing Matrix
-always @(*) begin
-    for (int i=0; i<NUM_M; i++) begin
-        master_granted[i] = (active_req[i] && arbiter_select == i);
-    end
-end`
-  },
-  {
-    id: 'l2-cache-controller',
-    name: 'L2_CACHE_SYSTEM',
-    category: 'Verification',
-    tagline: 'MESI-Coherent Multi-Core Cache Controller System',
-    description: 'A 4-way set associative L2 write-back cache, implementing a pseudo-LRU replacement policy, MESI cache coherence protocol, and complete formal coverage verification mapping complex CPU core coherence matrices.',
-    techStack: ['SystemVerilog', 'SymbiYosys', 'SystemVerilog Assertions', 'ModelSim'],
-    image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?q=80&w=600&auto=format&fit=crop',
-    metrics: {
-      lutCount: '12,240 LUTs',
-      timingSlack: '+0.85 ns @ 200MHz',
-      area: '0.22 mm²',
-      power: '42.5 mW',
-      frequency: '200 MHz'
-    },
-    specs: [
-      { label: 'Associativity', value: '4-Way Set Associative' },
-      { label: 'Coherency Protocol', value: 'MESI (Modified, Exclusive, Shared, Invalid)' },
-      { label: 'Line Replacement', value: 'Pseudo-LRU (Tree-based)' },
-      { label: 'Write Policy', value: 'Write-Back with Write-Allocate' }
-    ],
-    challenges: [
-      {
-        problem: 'Transient coherency race conditions between CPU0 writing and CPU1 reading simultaneously triggered deadlocks in formal assertions tests.',
-        solution: 'Developed an explicit "Snoop Buffer Pending Queue" holding read requests until local cache-lines successfully complete write-back sequences.'
-      }
-    ],
-    files: [
-      {
-        name: 'L2_Controller.sv',
-        path: 'cache/L2_Controller.sv',
-        content: `// MESI Coherent State Machine and Snooping Logic`,
-        size: '9.3 KB'
-      }
-    ],
-    codeSnippet: `// MESI Coherence State Transitions
-always @(*) begin
-    case (current_state)
-        INVALID:   if (cpu_read_miss)  next_state = SHARED;
-        SHARED:    if (cpu_write_hit) next_state = MODIFIED;
-        MODIFIED:  if (snoop_read)    next_state = SHARED;
-    endcase
-end`
-  },
-  {
-    id: 'eight-bit-computer',
-    name: '8-BIT_COMPUTER',
-    category: 'Computer Arch',
-    tagline: 'Classic Accumulator-Based von Neumann 8-Bit Computer',
-    description: 'A complete custom accumulator-based 8-bit computer implemented in synthesizable Verilog. Follows a classical von Neumann architecture, coordinated over an 8-bit shared tri-state bus. Features a custom 16-instruction ISA microsequenced by a control unit state machine and verified cycle-by-cycle inside Xilinx Vivado XSim.',
-    techStack: ['Verilog HDL', 'Vivado', 'Xilinx XSim', 'Computer Architecture', 'Digital Design'],
-    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=600&auto=format&fit=crop',
-    metrics: {
-      lutCount: '342 LUTs',
-      timingSlack: '+4.12 ns @ 50MHz',
-      area: 'FPGA Artix-7 Mapping',
-      power: '4.2 mW (Est.)',
-      frequency: '50 MHz'
-    },
-    specs: [
-      { label: 'Architecture Type', value: 'Accumulator-based von Neumann' },
-      { label: 'Data Width', value: '8-bit Word' },
-      { label: 'Address Space', value: '4-bit (16 addressed Bytes)' },
-      { label: 'Instruction Set', value: '16 core operations (Custom ISA)' },
-      { label: 'Bus Structure', value: '8-bit shared tri-state parallel' },
-      { label: 'Verification Tools', value: 'Xilinx Vivado XSim RTL Simulator' }
-    ],
-    challenges: [
-      {
-        problem: 'Logical bus contention and dynamic meta-stability risks when multiple registers drive high/low values onto the shared 8-bit bus concurrently.',
-        solution: 'Implemented high-impedance tri-state buffers (assign bus = output_enable ? register_data : 8\'bZ) on all modules connected to the shared interconnect. Integrated mutually-exclusive output control signals in the microsequence decoder to ensure at most one transmitter active per T-state.'
-      },
-      {
-        problem: 'Flickering ALU comparison outputs and asynchronous timing loops causing unstable conditional branching flags on LDA, ADD and SUB commands.',
-        solution: 'Isolated ALU carry and zero calculation paths by synchronizing physical flag outputs into a dedicated Flags Register. The register is latched on the positive clock edge only when the alu_flags_load control line is active, stabilizing jump calculations.'
-      }
-    ],
-    files: [
-      {
-        name: 'complete.v',
-        path: 'cores/8bit/complete.v',
-        content: `// =================================================================\n// PROJECT: 8-BIT_COMPUTER_DESIGN\n// FILE: complete.v\n// DESCRIPTION: Top-level module coordinating upper/lower blocks\n// =================================================================\n\nmodule complete (\n    input wire clk,\n    input wire rst_n,\n    output wire [7:0] out_display\n);\n\n    // --- SHARED TRI-STATE BUS ---\n    wire [7:0] bus;\n\n    // --- CONTROL BUS SIGNALS ---\n    wire [15:0] ctrl;\n    wire [3:0] pc_val, mar_val;\n    wire [7:0] ram_val, ir_val, acc_val, regb_val, alu_val;\n    wire [2:0] flags; // [Carry, Zero, Negative]\n\n    // Upper Layer Instance (Registers & PC)\n    upper upper_inst (\n        .clk(clk),\n        .rst_n(rst_n),\n        .bus(bus),\n        .ctrl(ctrl),\n        .pc_out(pc_val),\n        .mar_out(mar_val),\n        .ir_out(ir_val),\n        .acc_out(acc_val)\n    );\n\n    // Lower Layer Instance (ALU, Reg B, Flags)\n    lower lower_inst (\n        .clk(clk),\n        .rst_n(rst_n),\n        .bus(bus),\n        .ctrl(ctrl),\n        .acc_in(acc_val),\n        .regb_out(regb_val),\n        .alu_out(alu_val),\n        .flags_out(flags)\n    );\n\n    // Control Unit (Microprogrammed State Machine)\n    control_unit cu_inst (\n        .clk(clk),\n        .rst_n(rst_n),\n        .opcode(ir_val[7:4]),\n        .flags(flags),\n        .ctrl(ctrl)\n    );\n\n    // Output Latch Register\n    OutputRegister out_reg (\n        .clk(clk),\n        .load(ctrl[12]), // out_load\n        .in_val(bus),\n        .out_val(out_display)\n    );\n\nendmodule`,
-        size: '1.9 KB'
-      },
-      {
-        name: 'control_unit.v',
-        path: 'cores/8bit/control_unit.v',
-        content: `// =================================================================\n// PROJECT: 8-BIT_COMPUTER_DESIGN\n// FILE: control_unit.v\n// DESCRIPTION: Microsequencer decoder generating control signals\n// =================================================================\n\nmodule control_unit (\n    input wire clk,\n    input wire rst_n,\n    input wire [3:0] opcode,\n    input wire [2:0] flags, // [Carry, Zero, Negative]\n    output reg [15:0] ctrl\n);\n\n    reg [2:0] t_state;\n\n    // T-States Sequencer (6-state clock machine)\n    always @(posedge clk or negedge rst_n) begin\n        if (!rst_n) begin\n            t_state <= 3'd1;\n        end else begin\n            if (t_state == 3'd6) \n                t_state <= 3'd1;\n            else \n                t_state <= t_state + 1'b1;\n        end\n    end\n\n    // Control Signal Bitmaps:\n    // ctrl[0]  = pc_oe,     ctrl[1]  = pc_count\n    // ctrl[2]  = mar_load,   ctrl[3]  = ram_oe\n    // ctrl[4]  = ram_we,     ctrl[5]  = ir_load\n    // ctrl[6]  = ir_oe,      ctrl[7]  = acc_load\n    // ctrl[8]  = acc_oe,     ctrl[9]  = regb_load\n    // ctrl[10] = alu_oe,     ctrl[11] = alu_sub\n    // ctrl[12] = out_load,   ctrl[13] = flags_load\n\n    always @(*) begin\n        ctrl = 16'b0;\n        case (t_state) \n            // Fetch cycle\n            3'd1: ctrl[0] = 1'b1; ctrl[2] = 1'b1; // T1: MAR <- PC\n            3'd2: ctrl[1] = 1'b1;                 // T2: PC <- PC + 1\n            3'd3: ctrl[3] = 1'b1; ctrl[5] = 1'b1; // T3: IR <- RAM[MAR]\n            \n            // Execute cycle (Opcode Decodes)\n            default: begin\n                case (opcode)\n                    4'b0000: begin // LDA\n                        if (t_state == 3'd4) begin ctrl[6] = 1'b1; ctrl[2] = 1'b1; end // MAR <- IR[3:0]\n                        if (t_state == 3'd5) begin ctrl[3] = 1'b1; ctrl[7] = 1'b1; end // Acc <- RAM[MAR]\n                    end\n                    4'b0010: begin // ADD\n                        if (t_state == 3'd4) begin ctrl[6] = 1'b1; ctrl[2] = 1'b1; end // MAR <- IR[3:0]\n                        if (t_state == 3'd5) begin ctrl[3] = 1'b1; ctrl[9] = 1'b1; end // Reg B <- RAM[MAR]\n                        if (t_state == 3'd6) begin ctrl[10] = 1'b1; ctrl[7] = 1'b1; ctrl[13] = 1'b1; end // Acc <- Acc + B, Flags Load\n                    end\n                    4'b0011: begin // SUB\n                        if (t_state == 3'd4) begin ctrl[6] = 1'b1; ctrl[2] = 1'b1; end\n                        if (t_state == 3'd5) begin ctrl[3] = 1'b1; ctrl[9] = 1'b1; end\n                        if (t_state == 3'd6) begin ctrl[10] = 1'b1; ctrl[11] = 1'b1; ctrl[7] = 1'b1; ctrl[13] = 1'b1; end // Acc <- Acc - B, sub bit, Flags Load\n                    end\n                    4'b1110: begin // OUT\n                        if (t_state == 3'd4) begin ctrl[8] = 1'b1; ctrl[12] = 1'b1; end // OutReg <- Acc\n                    end\n                    default: ctrl = 16'b0;\n                endcase\n            end\n        endcase\n    end\n\nendmodule`,
-        size: '2.5 KB'
-      }
-    ],
-    codeSnippet: `// Shared tri-state bus interface implementation in Verilog\nassign bus = (pc_oe)   ? pc_out  : \n             (ram_oe)  ? ram_out : \n             (ir_oe)   ? ir_out  : \n             (acc_oe)  ? acc_out : \n             (alu_oe)  ? alu_out : \n             8'bzzzzzzzz;`
   }
 ];
 
@@ -504,7 +368,7 @@ export const TIMELINE_STAGES: TimelineStage[] = [
 export const COMMITS: CommitLog[] = [
   {
     hash: '0xfa39be4',
-    message: 'Merge pull request #42 from core/rv32im-hazard-forwarding-fix',
+    message: 'Merge pull request #42 from core/5-stage-pipeline-hazard-forwarding-fix',
     branch: 'main',
     timestamp: '2026-06-29 06:12:44'
   },
@@ -590,19 +454,6 @@ export const DOWNLOAD_ASSETS: DownloadAsset[] = [
     description: 'Synthesizable SystemVerilog core, 5-stage classic pipeline, hazard detection unit, and Booth multiplier.'
   },
   {
-    id: 'axi4-crossbar-test',
-    name: 'APB Compliant UART Peripheral with Integrated FSM',
-    category: 'Verification',
-    icon: 'waveform',
-    version: '1.0.4',
-    size: '890 KB',
-    status: 'Restricted',
-    fileType: 'RTL Peripheral Design',
-    downloadPath: 'downloads/UART_APB_Peripheral.zip',
-    downloadCount: 62,
-    description: 'Full peripheral UART controller with registers, baud rate generator, and complete testbench layers.'
-  },
-  {
     id: 'rv32im-floorplan-def',
     name: 'RV32IM 5-Stage Pipeline Layout',
     category: 'Layouts',
@@ -614,31 +465,5 @@ export const DOWNLOAD_ASSETS: DownloadAsset[] = [
     downloadPath: 'downloads/RV32IM_5Stage_Floorplan.zip',
     downloadCount: 45,
     description: 'TSMC 65nm cell placement files, DEF floorplan, power mesh configurations, and timing sign-off logs.'
-  },
-  {
-    id: '8-bit-cpu',
-    name: '8 Bit Simple Logic CPU',
-    category: 'Layouts',
-    icon: 'layers',
-    version: '1.1.0',
-    size: '5.4 MB',
-    status: 'Restricted',
-    fileType: 'Schematic / FPGA Bitstream',
-    downloadPath: 'downloads/EightBitCPU_Design.zip',
-    downloadCount: 119,
-    description: 'Discrete standard logic block layouts, custom breadboard layout maps, and microcode ROM specifications.'
-  },
-  {
-    id: 'l2-cache-gate-netlist',
-    name: 'L2 Cache Coherence Netlist',
-    category: 'Netlists',
-    icon: 'cpu',
-    version: '2.1.0',
-    size: '4.1 MB',
-    status: 'Restricted',
-    fileType: 'Gate-Level Verilog Netlist',
-    downloadPath: 'downloads/L2_Cache_Netlist.zip',
-    downloadCount: 34,
-    description: 'Synthesized gate-level netlist using 7nm cells, cell delay specifications, and power sign-off reports.'
   }
 ];

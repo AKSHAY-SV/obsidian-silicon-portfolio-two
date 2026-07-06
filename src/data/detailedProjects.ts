@@ -2,128 +2,83 @@ import { ProjectDetail } from '../types';
 
 export const DETAILED_PROJECTS: ProjectDetail[] = [
   {
-    id: 'rv32im-proc',
-    slug: 'rv32im-processor',
-    name: 'RV32IM Processor Core',
-    tagline: 'High-Performance Synthesizable RISC-V CPU Core',
+    id: '5-stage-soc',
+    slug: '5-stage-soc',
+    name: '5-Stage SoC with Custom RISC-V Processor',
+    tagline: '5-Stage Pipelined RISC-V System-on-Chip (7nm FinFET Node)',
+    category: 'ASIC',
+    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=600&auto=format&fit=crop',
+    techStack: ['Chisel', 'Verilog', 'TSMC 7nm PDK', 'Synopsys Design Compiler', 'Cadence Innovus', 'OpenROAD'],
+    description: 'A fully integrated mixed-signal 5-stage pipelined RISC-V processor co-designed with high-efficiency accelerators, sharing an L1/L2 coherence fabric and interfacing via high-speed APB/AXI4 interconnects.',
+    metrics: [
+      { label: 'Process Node', value: 'TSMC 7nm FinFET N7' },
+      { label: 'Core Frequency', value: '1.2 GHz @ 0.85V' },
+      { label: 'Cell Area', value: '12.54 mm²' },
+      { label: 'Peak Power', value: '452 mW' },
+      { label: 'NPU Output', value: '4.2 TOPS INT8' }
+    ],
+    designObjectives: [
+      'Design a fully compliant RV32IM base integer processor core with dynamic hazard-forwarding logic.',
+      'Achieve timing closure at 1.2 GHz clock frequency under nominal corner checks on TSMC N7 FinFET process node.',
+      'Construct a robust power mesh on Metal 7 & Metal 8 layers ensuring static/dynamic IR drop remains strictly below 2% of VDD.',
+      'Optimize layout congestion near highly parallel FPU and Systolic Matrix NPU accelerators.'
+    ],
+    features: [
+      'Quad-core asymmetric cluster with L1/L2 Cache Coherency (MESI protocol).',
+      'Pipelined Radix-4 Booth Integer Multiplier and 8-cycle non-restoring divider unit.',
+      'Systolic INT8 Matrix Multiplication Accelerator delivering 4.2 TOPS.',
+      '128-bit Non-blocking AXI4 crossbar with concurrent read/write transactions.',
+      'Complete APB peripheral subsystem including UART, SPI, GPIO, timers and PLIC controller.'
+    ],
+    overview: 'This project showcases a mixed-signal 5-stage pipelined RISC-V System-on-Chip fabricated using TSMC 7nm FinFET PDK tools. Co-designed alongside systolic matrix NPU co-processors, the chip interfaces over high-bandwidth 128-bit non-blocking AXI4 bus rings to minimize latency. The core utilizes multi-source clock tree synthesis to maintain global clock skew below 35ps.',
+    architecture: 'Features a heterogeneous multi-master arrangement. CPU cores and NPU blocks act as master entities communicating with direct set-associative tag arrays and coherent L2 cache line managers. Low-speed peripherals register accesses are translated through a standard APB bridge to preserve main memory bandwidth.',
+    challenges: 'Dynamic voltage fluctuations (dynamic IR drop) in the core processor boundary exceeded 85mV during heavy Systolic NPU arithmetic stress, leading to register setup violations.',
+    solutions: 'Re-synthesized the power grid mesh using an enhanced dual-grid matrix on Metal 7/Metal 8, placed decaps directly flanking structural modules, and staggered NPU state pipeline stages to limit current surges.',
+    verification: 'Rigorous validation using a SystemVerilog UVM environment, constraint-random instruction streams, SystemVerilog Assertions (SVA) checking pipeline hazards, and full coverage validation against RISCOF suite.',
+    simulation: 'Co-simulation run inside VCS and Verilator. Compilation traces verified against instruction-level logs to prove cycle-accurate execution matching.',
+    documentation: 'Includes register maps, pad-ring layouts, pinouts descriptions, SDC constraint rules, synthesis gate summaries, and timing sign-off reports.',
+    waveforms: 'AXI4 bus write transaction waves illustrating address, data, and handshakes synchronization during multi-beat burst writes.',
+    diagram: '/assets/projects/5-stage-soc/block-diagram/block-diagram.png',
+    futureImprovements: 'Implementing directory-based L2 coherency models to support scaling beyond 8 core clusters.'
+  },
+  {
+    id: '5-stage-pipeline-riscv',
+    slug: '5-stage-pipeline-riscv',
+    name: '5-Stage Pipeline RISC-V Processor',
+    tagline: 'High-Performance 5-Stage Pipelined RISC-V CPU Core',
     category: 'Computer Arch',
     image: 'https://images.unsplash.com/photo-1591453089816-0fbb971b454c?q=80&w=600&auto=format&fit=crop',
     techStack: ['SystemVerilog', 'Verilator', 'C++ Testbench', 'FPGA (Artix-7)', 'OpenSTA'],
-    description: 'A fully-synthesizable, cycle-accurate implementation of the RISC-V RV32IM ISA. Features a high-efficiency ALU paired with parameterizable multi-cycle integer divider and multipliers.',
+    description: 'A fully-synthesizable, cycle-accurate implementation of the RISC-V RV32IM instruction set architecture. Features a 5-stage classic pipeline (Fetch, Decode, Execute, Memory, Write-back) with full data-forwarding, hazard detection, and a parameterizable hardware integer multiplier/divider unit.',
     metrics: [
+      { label: 'ISA Extension', value: 'RV32IM (Integer + Multiply)' },
+      { label: 'Pipeline Depth', value: '5 Stages with Bypass paths' },
       { label: 'Frequency', value: '180 MHz (TSMC 65nm)' },
       { label: 'Cell Area', value: '0.18 mm²' },
-      { label: 'Logic Gates', value: '38.4k NAND2' }
+      { label: 'Lut Count', value: '4,280 LUTs (FPGA)' }
     ],
-    overview: 'This project centers on the implementation of a fully compliant RISC-V RV32IM processor. Special focus was placed on creating synthesizable hardware blocks that do not generate unintended latches and maintain strict synchronous reset parameters.',
-    architecture: 'Single-cycle core mapping instruction-level registers to internal hardware pipelines. Employs a parameterizable barrel shifter and pipelined execution logic that integrates closely with memory arrays.',
-    challenges: 'Multi-bit hardware multiplication propagation delay heavily restricted maximum clock speed in early synthesis runs.',
-    solutions: 'Designed an iterative Radix-4 Booth Multiplier with internal pipelining, splitting critical multiplier path delays over 3 independent clocks.',
-    verification: 'Verified through a multi-layered Verilator testbench writing C++ stimulus drivers, achieving full compliance with official RISC-V instruction-level validation suites.',
-    simulation: 'Cycle-accurate simulation trace logs compiled to VCD files and viewed in GTKWave to confirm register file and execution timing.',
-    documentation: 'Complete architecture reference manual detailing instruction execution clocks, register allocations, and physical block sizes.',
-    waveforms: 'Displays the partial product summation waves executing a 32x32-bit hardware multiply.',
-    diagram: 'Displays the standard Harvard register architecture feeding custom execute modules.',
-    futureImprovements: 'Integrating branch target buffers to reduce multi-cycle delay branches.'
-  },
-  {
-    id: 'five-stage-pipe',
-    slug: 'five-stage-pipeline',
-    name: 'Five Stage Pipeline RV32IM',
-    tagline: 'Classic Pipelined CPU with Forwarding & Hazard Bypass',
-    category: 'RTL Design',
-    image: 'https://images.unsplash.com/photo-1601987177651-8edfe6c20009?q=80&w=600&auto=format&fit=crop',
-    techStack: ['SystemVerilog', 'Operand Forwarding', 'Hazard Detection', 'ModelSim'],
-    description: 'Classic Fetch, Decode, Execute, Memory, and Write-Back hardware pipeline core. Fully equipped with operand-forwarding registers and data hazard detectors to optimize IPC.',
-    metrics: [
-      { label: 'Pipeline depth', value: '5 Stages' },
-      { label: 'Instruction IPC', value: '0.96 peak' },
-      { label: 'Lut Count', value: '4,280 LUTs' }
+    designObjectives: [
+      'Implement synthesizable SystemVerilog pipelines with full hazard detection and forward-bypass paths.',
+      'Ensure zero latch warnings during synthesis to maintain predictable synchronous behavior.',
+      'Verify timing closure at 150MHz target frequency on standard Artix-7 FPGA boards.',
+      'Achieve maximum instruction throughput exceeding 0.95 IPC on classic branch workloads.'
     ],
-    overview: 'Pipelining introduces high-speed clock cycles but brings data and control hazards. This project micro-architects a complete forwarding path and bypass matrix to optimize throughput.',
-    architecture: 'Features a classic 5-stage setup: Fetch (IF), Decode (ID), Execute (EX), Memory (MEM), and Write-back (WB). Leverages synchronous registers to isolate stages.',
-    challenges: 'Read-After-Write (RAW) data hazards caused continuous 2-cycle processor stalls, degrading instructions-per-cycle (IPC) to 0.74.',
-    solutions: 'Designed a comprehensive bypass matrix routing ALU results directly from MEM and WB stages back to the execute inputs, reducing stalls to 0 cycles.',
-    verification: 'Simulated with randomized instruction streams in ModelSim to track state verification under overlapping load-store cycles.',
-    simulation: 'Analyzed using timing-annotated ModelSim tests verifying data-forwarding operations across 10,000 randomized cycles.',
-    documentation: 'Includes hazard-bypassing tables, timing delay tables, and routing schematics.',
-    waveforms: 'Illustrates forwarding pulses where instruction sequence reads from registers just modified by the previous write back stage.',
-    diagram: 'Shows the 5 distinct execution stages connected by explicit pipeline control registers.',
-    futureImprovements: 'Transitioning to a dual-issue execution pipeline to exceed 1.0 IPC.'
-  },
-  {
-    id: 'coherent-cache',
-    slug: 'cache-memory',
-    name: 'Cache Memory',
-    tagline: 'MESI-Coherent Multi-Core Set Associative L2 Cache',
-    category: 'Computer Arch',
-    image: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=600&auto=format&fit=crop',
-    techStack: ['SystemVerilog', 'SymbiYosys', 'SystemVerilog Assertions', 'ModelSim'],
-    description: 'A 4-way set associative L2 write-back cache system. Implements tree-based pseudo-LRU line replacement and MESI cache-coherency protocols for multi-core bus systems.',
-    metrics: [
-      { label: 'Coherence', value: 'MESI Protocol' },
-      { label: 'Associativity', value: '4-Way Set' },
-      { label: 'Frequency', value: '200 MHz' }
+    features: [
+      'Classical 5-Stage Pipeline: Fetch (IF), Decode (ID), Execute (EX), Memory (MEM), Write-back (WB).',
+      'High-performance ALU coupled with dynamic hazard detection and register forwarding paths.',
+      'Iterative Radix-4 Booth Multiplier and State-Machine driven Division units.',
+      'Branch Target Buffer (BTB) featuring dynamic 2-bit branch prediction buffers.',
+      'Integrated interfaces to private 4KB instruction cache and 4KB data cache.'
     ],
-    overview: 'Ensures absolute memory consistency across multi-cluster processor cores. Tracks cache line states dynamically and responds to global interconnect snoop commands.',
-    architecture: 'Includes integrated tag memories, direct SRAM array interfaces, pseudo-LRU age trees, and a state machine implementing standard MESI status (Modified, Exclusive, Shared, Invalid).',
-    challenges: 'Overlapping memory write/read misses from separate cores caused rare lockups during stress testing.',
-    solutions: 'Developed Snoop Buffer Pending Queues to hold external queries and serialise conflicting transactions safely.',
-    verification: 'Formally verified using SystemVerilog Assertions (SVA) inside SymbiYosys, providing absolute proof of coherence and deadlock-free operation.',
-    simulation: 'ModelSim logic simulations verifying MESI state transitions under forced cache-line collisions.',
-    documentation: 'Complete state transition diagram alongside comprehensive explanation of snooping pathways and bus requests.',
-    waveforms: 'Displays the snoop invalidation bus signals transitioning cache lines from SHARED to INVALID on remote write hits.',
-    diagram: 'Shows the Tag/Data arrays aligned to snoop buses and LRU logic units.',
-    futureImprovements: 'Scaling the coherence scheme to support directory-based tracking for larger core clusters.'
-  },
-  {
-    id: 'apb-uart-periph',
-    slug: 'apb-uart',
-    name: 'APB UART Peripheral',
-    tagline: 'Configurable UART Controller with AMBA APB Bus Interface',
-    category: 'RTL Design',
-    image: 'https://images.unsplash.com/photo-1563770660941-20978e870e26?q=80&w=600&auto=format&fit=crop',
-    techStack: ['Verilog', 'AMBA APB', 'FIFO Registers', 'Xilinx Vivado'],
-    description: 'Synthesizable UART serial transceiver peripheral mapped to the standard AMBA APB bus protocol. Equipped with dual 16-deep FIFO arrays.',
-    metrics: [
-      { label: 'FIFO Depth', value: '16 Words' },
-      { label: 'Baud Rates', value: 'Configurable' },
-      { label: 'Bus Width', value: '32-bit APB' }
-    ],
-    overview: 'Provides robust asynchronous communication capabilities to synthesizable processor cores. Integrates easily into micro-architectures via a clean APB bus interface.',
-    architecture: 'Features transmitter/receiver shifting blocks, a baud rate generator utilizing division registers, and independent Tx/Rx FIFO memory blocks.',
-    challenges: 'FIFO overflows and asynchronous clock domain glitches on high transmission speeds.',
-    solutions: 'Wrote dual gray-coded address pointer synchronization circuits and robust empty/full check logic with meta-stability filtering.',
-    verification: 'Validated using self-checking testbenches verifying register write/read access, baud divisions, and error interrupts.',
-    simulation: 'Functional simulations illustrating serial transmit bit streams aligned with correct baud tick rates under GTKWave.',
-    documentation: 'User-level registers map detailing interrupt mask registers, baud controls, and parity options.',
-    waveforms: 'APB bus transaction cycles showcasing zero-wait state register read/write sequences.',
-    diagram: 'Internal blocks mapping APB bus controls to UART transmitter shift lines.',
-    futureImprovements: 'Adding direct hardware auto-flow control pins (RTS/CTS).'
-  },
-  {
-    id: 'eight-bit-computer',
-    slug: '8-bit-cpu',
-    name: '8 bit CPU',
-    tagline: 'Custom Discrete TTL Logic Microcomputer',
-    category: 'Digital Design',
-    image: 'https://images.unsplash.com/photo-1555664424-778a1e5e1b48?q=80&w=600&auto=format&fit=crop',
-    techStack: ['Digital Logic', 'Breadboard Design', 'EEPROM Microcode', 'Assembly'],
-    description: 'A complete custom-designed 8-bit computer built entirely from discrete 7400-series TTL logic integrated circuits.',
-    metrics: [
-      { label: 'RAM Capacity', value: '16 Bytes' },
-      { label: 'Buses', value: '8-bit common' },
-      { label: 'Control Logic', value: 'Microcoded' }
-    ],
-    overview: 'An educational-focused hardware implementation that isolates every structural block of a processor. Built using discrete chips to provide physical debugging of bus lines.',
-    architecture: 'Includes an 8-bit program counter, instruction register, 16-byte RAM, ALU with add/sub gates, accumulator register, and EEPROM microprogram sequencer.',
-    challenges: 'Electrical signal bounces and noise glitches on common buses when clock speed exceeded 100 kHz.',
-    solutions: 'Wired decoupling bypass capacitors on every chip supply pin and routed common bus rails using star-ground patterns to suppress noise.',
-    verification: 'Verified by loading hand-compiled custom assembly programs for Fibonacci calculations and multiplier loops.',
-    simulation: 'Trace logs modeled in software mapping instruction register steps to physical pin outputs.',
-    documentation: 'Wired schematics, control microcode registers, and instruction-set reference sheets.',
-    waveforms: 'Oscilloscope bus probing displaying stable 5V TTL logic level thresholds during clock transitions.',
-    diagram: 'Hand-drawn schematics mapping discrete ALU logic gates, buses, and registers.',
-    futureImprovements: 'Expanding memory mapping to support up to 256 bytes of RAM.'
+    overview: 'A synthesizable, cycle-accurate classical 5-stage pipeline RISC-V core. Incorporates dynamic hazard-bypassing structures to forward operands directly from Memory or Writeback pipeline registers, reducing stalls to 0 for consecutive ALU operations.',
+    architecture: 'Classic Harvard processor layout separating instruction fetch buses from data memory ports. Dedicated dual-port Register File allows parallel instruction register decode while execution blocks process ALU operands forwarded from downstream stages.',
+    challenges: 'Read-After-Write (RAW) data hazards in tight instructions loops introduced up to 2-cycle stalls, degrading overall IPC from 1.0 to 0.74.',
+    solutions: 'Constructed an Operand Forwarding Unit that inspects register destinations in EX, MEM and WB stages and routes raw register buffers directly back to ALU input muxes.',
+    verification: 'Extensive verification using a C++ Verilator simulator checking execution states against a golden architectural instruction model on 10,000 randomized loops.',
+    simulation: 'Verilator compilation logs, functional waveform plots, and cycle-by-cycle register trace logs viewing register status.',
+    documentation: 'Instruction timing matrices, forwarding state logic schematics, and pin description tables.',
+    waveforms: 'Pipeline forwarding transactions illustrating EX-to-ID and MEM-to-ID data bypassing under back-to-back mathematical operations.',
+    diagram: '/assets/projects/5-stage-pipeline-riscv/block-diagram/block-diagram.png',
+    futureImprovements: 'Transitioning to a superscalar dual-issue instruction pipeline to scale execution performance beyond 1.0 IPC.'
   }
 ];

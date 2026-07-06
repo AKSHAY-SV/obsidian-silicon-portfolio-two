@@ -5,7 +5,6 @@ import TopNavBar from './components/TopNavBar';
 import Footer from './components/Footer';
 import InteractiveHeroCanvas from './components/InteractiveHeroCanvas';
 import ProjectsLibrary from './components/ProjectsLibrary';
-import DownloadCenter from './components/DownloadCenter';
 import SecurePortal from './components/SecurePortal';
 
 import About from './components/About';
@@ -14,7 +13,6 @@ import AccessRequest from './components/AccessRequest';
 import AdminLogin from './components/AdminLogin';
 import AdminLoginModal from './components/AdminLoginModal';
 import AdminDashboard from './components/AdminDashboard';
-import SiliconCopilot from './components/copilot/SiliconCopilot';
 import { auth } from './firebase/firebase';
 
 import DesignFlowVisualizer from './components/DesignFlowVisualizer';
@@ -96,19 +94,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Synchronize visited tabs and search queries to sessionStorage for Copilot Context
-  useEffect(() => {
-    try {
-      const currentPages = JSON.parse(sessionStorage.getItem('silicon_copilot_visited_pages') || '[]');
-      if (!currentPages.includes(activeTab)) {
-        currentPages.push(activeTab);
-        sessionStorage.setItem('silicon_copilot_visited_pages', JSON.stringify(currentPages));
-        window.dispatchEvent(new Event('silicon_copilot_sync'));
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }, [activeTab]);
+
 
   // Synchronize activeTab + projectSlug with URL path
   useEffect(() => {
@@ -176,20 +162,7 @@ export default function App() {
     return () => unsubscribe();
   }, [activeTab]);
 
-  useEffect(() => {
-    if (searchQuery.trim().length > 2) {
-      try {
-        const currentSearches = JSON.parse(sessionStorage.getItem('silicon_copilot_searches') || '[]');
-        if (!currentSearches.includes(searchQuery.trim())) {
-          currentSearches.push(searchQuery.trim());
-          sessionStorage.setItem('silicon_copilot_searches', JSON.stringify(currentSearches));
-          window.dispatchEvent(new Event('silicon_copilot_sync'));
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }
-  }, [searchQuery]);
+
 
   const filteredSearchResults = searchQuery.trim() === ''
     ? []
@@ -543,9 +516,6 @@ export default function App() {
           </div>
         </div>
       )}
-
-      {/* Silicon Copilot AI Assistant Flagship Feature */}
-      <SiliconCopilot activeTab={activeTab} setActiveTab={setActiveTab} />
 
     </div>
   );

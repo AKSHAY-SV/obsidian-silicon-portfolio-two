@@ -90,12 +90,17 @@ export default function AdminDashboard({ onReturn }: AdminDashboardProps) {
   const [error, setError] = useState<string | null>(null);
 
   // Active Admin View Tab
-  const [activeTab, setActiveTab] = useState<'requests' | 'downloads'>('requests');
+  const [activeTab, setActiveTab] = useState<'requests' | 'downloads' | 'adminLogs'>('requests');
 
   // Secure Download Analytics & Logging States
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [isAnalyticsLoading, setIsAnalyticsLoading] = useState<boolean>(false);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+
+  // Administrative Action Logs States
+  const [adminLogs, setAdminLogs] = useState<any[]>([]);
+  const [isAdminLogsLoading, setIsAdminLogsLoading] = useState<boolean>(false);
+  const [adminLogsError, setAdminLogsError] = useState<string | null>(null);
 
   const fetchAnalytics = async () => {
     setIsAnalyticsLoading(true);
@@ -121,9 +126,35 @@ export default function AdminDashboard({ onReturn }: AdminDashboardProps) {
     }
   };
 
+  const fetchAdminLogs = async () => {
+    setIsAdminLogsLoading(true);
+    setAdminLogsError(null);
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) throw new Error('Unauthenticated admin session.');
+      const res = await fetch('/api/admin/audit-logs', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to fetch administrative audit logs');
+      }
+      setAdminLogs(data.logs || []);
+    } catch (err: any) {
+      console.error(err);
+      setAdminLogsError(err.message || 'Failed to load administrative logs');
+    } finally {
+      setIsAdminLogsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'downloads') {
       fetchAnalytics();
+    } else if (activeTab === 'adminLogs') {
+      fetchAdminLogs();
     }
   }, [activeTab]);
 
@@ -408,6 +439,17 @@ export default function AdminDashboard({ onReturn }: AdminDashboardProps) {
         >
           <Cpu className="h-3.5 w-3.5" />
           Secure Downloads Audit Log
+        </button>
+        <button
+          onClick={() => setActiveTab('adminLogs')}
+          className={`px-5 py-3 font-mono text-[10px] uppercase font-black tracking-wider transition-all border-b-2 cursor-pointer flex items-center gap-1.5 ${
+            activeTab === 'adminLogs'
+              ? 'border-[#a78bfa] text-[#a78bfa] bg-[#a78bfa]/5'
+              : 'border-transparent text-slate-500 hover:text-slate-300'
+          }`}
+        >
+          <Lock className="h-3.5 w-3.5" />
+          Administrative Action Logs
         </button>
       </div>
 
@@ -1061,7 +1103,7 @@ export default function AdminDashboard({ onReturn }: AdminDashboardProps) {
         )}
       </div>
         </>
-      ) : (
+      ) : activeTab === 'downloads' ? (
         <div className="space-y-8 animate-fade-in">
           {/* DOWNLOADS STATISTIC CARDS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1187,6 +1229,94 @@ export default function AdminDashboard({ onReturn }: AdminDashboardProps) {
                           ) : (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-mono uppercase font-black bg-red-500/10 text-red-400 border border-red-500/20">
                               FAILED
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-8 animate-fade-in">
+          {/* ADMINISTRATIVE ACTION LOGS LIST */}
+          <div className="rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#0d0d0f] overflow-hidden">
+            <div className="p-5 border-b border-white/[0.04] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h3 className="font-mono text-xs font-black uppercase tracking-wider text-slate-300">Administrative Action Logs</h3>
+                <p className="font-sans text-[11px] text-slate-500 mt-0.5">Real-time immutable administrative authorization logs</p>
+              </div>
+              <button
+                onClick={fetchAdminLogs}
+                disabled={isAdminLogsLoading}
+                className="px-3 py-1.5 rounded-lg font-mono text-[9px] uppercase font-black bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <RefreshCw className={`h-3 w-3 ${isAdminLogsLoading ? 'animate-spin' : ''}`} /> Refresh
+              </button>
+            </div>
+
+            {adminLogsError && (
+              <div className="p-5 text-center text-xs text-red-400 font-sans border-b border-white/[0.04]">
+                ⚠️ {adminLogsError}
+              </div>
+            )}
+
+            {/* admin logs table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-white/[0.04] bg-[#09090b] font-mono text-[9px] uppercase font-black tracking-wider text-slate-500">
+                    <th className="p-4 pl-6">Administrator</th>
+                    <th className="p-4">Action</th>
+                    <th className="p-4">Request ID</th>
+                    <th className="p-4">Timestamp</th>
+                    <th className="p-4">IP Address</th>
+                    <th className="p-4 pr-6 text-right">Result</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.02]">
+                  {isAdminLogsLoading ? (
+                    [...Array(5)].map((_, i) => (
+                      <tr key={i} className="animate-pulse">
+                        <td className="p-4 pl-6"><div className="h-3 bg-white/5 rounded-md w-32" /></td>
+                        <td className="p-4"><div className="h-3 bg-white/5 rounded-md w-28" /></td>
+                        <td className="p-4"><div className="h-3 bg-white/5 rounded-md w-36" /></td>
+                        <td className="p-4"><div className="h-3 bg-white/5 rounded-md w-24" /></td>
+                        <td className="p-4"><div className="h-3 bg-white/5 rounded-md w-20" /></td>
+                        <td className="p-4 pr-6 text-right"><div className="h-5 bg-white/5 rounded-full w-14 ml-auto" /></td>
+                      </tr>
+                    ))
+                  ) : !adminLogs || adminLogs.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="p-8 text-center text-xs font-sans text-slate-500">
+                        No administrative action logs found in secure database storage.
+                      </td>
+                    </tr>
+                  ) : (
+                    adminLogs.map((log: any) => (
+                      <tr key={log.id} className="hover:bg-white/[0.01] transition-colors font-sans text-xs text-slate-300">
+                        <td className="p-4 pl-6 font-medium text-white">{log.administratorEmail}</td>
+                        <td className="p-4 text-slate-400">
+                          {log.action === 'approve' ? (
+                            <span className="text-emerald-400 font-semibold uppercase font-mono text-[10px]">APPROVE</span>
+                          ) : (
+                            <span className="text-red-400 font-semibold uppercase font-mono text-[10px]">REJECT</span>
+                          )}
+                        </td>
+                        <td className="p-4 font-mono text-[10px] text-purple-300 font-semibold">{log.requestId}</td>
+                        <td className="p-4 text-slate-400 font-mono text-[10px]">{log.timestamp}</td>
+                        <td className="p-4 text-slate-500 font-mono text-[10px]">{log.ipAddress}</td>
+                        <td className="p-4 pr-6 text-right">
+                          {log.result === 'success' ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-mono uppercase font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              SUCCESS
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-mono uppercase font-black bg-red-500/10 text-red-400 border border-red-500/20">
+                              {log.result?.toUpperCase() || 'FAILED'}
                             </span>
                           )}
                         </td>

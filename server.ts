@@ -4,10 +4,12 @@ import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 import sendEmailHandler from "./api/send-email";
 import requestActionHandler from "./api/admin/request-action";
+import auditLogsHandler from "./api/admin/audit-logs";
 import initHandler from "./api/downloads/init";
 import requestDownloadHandler from "./api/downloads/request-download";
 import serveHandler from "./api/downloads/serve";
 import analyticsHandler from "./api/downloads/analytics";
+import projectAssetsHandler from "./api/projects/assets";
 
 // Load environment variables
 dotenv.config();
@@ -32,12 +34,20 @@ app.post("/api/send-email", sendEmailHandler);
 
 // API: Refactored secure backend-orchestrated action endpoint
 app.post("/api/admin/request-action", requestActionHandler);
+app.get("/api/admin/audit-logs", auditLogsHandler);
 
 // API: Downloads Management Endpoints
 app.get("/api/downloads/init", initHandler);
 app.post("/api/downloads/request-download", requestDownloadHandler);
 app.get("/api/downloads/serve", serveHandler);
 app.get("/api/downloads/analytics", analyticsHandler);
+
+// Serve project folders statically under /assets/projects/
+app.use("/assets/projects/5-stage-pipeline-riscv", express.static(path.join(process.cwd(), "5-stage-pipeline-riscv")));
+app.use("/assets/projects/5-stage-soc", express.static(path.join(process.cwd(), "5-stage-soc")));
+
+// API: Project Assets Discovery Endpoint
+app.get("/api/projects/assets", projectAssetsHandler);
 
 // Setup dev server / static serving
 async function bootstrap() {
