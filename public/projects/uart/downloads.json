@@ -1,0 +1,12 @@
+[
+  {
+    "id": "uart-rtl-src",
+    "name": "UART_Controller_RTL.zip",
+    "category": "RTL",
+    "icon": "code",
+    "version": "1.0.1",
+    "size": "34 KB",
+    "status": "Restricted",
+    "fileType": "SystemVerilog / RTL Source"
+  }
+]

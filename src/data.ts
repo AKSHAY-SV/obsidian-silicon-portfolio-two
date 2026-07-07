@@ -465,5 +465,44 @@ export const DOWNLOAD_ASSETS: DownloadAsset[] = [
     downloadPath: 'downloads/RV32IM_5Stage_Floorplan.zip',
     downloadCount: 45,
     description: 'TSMC 65nm cell placement files, DEF floorplan, power mesh configurations, and timing sign-off logs.'
+  },
+  {
+    id: 'uart-rtl-src',
+    name: 'UART Controller IP Core',
+    category: 'RTL',
+    icon: 'code',
+    version: '1.0.1',
+    size: '34 KB',
+    status: 'Restricted',
+    fileType: 'SystemVerilog / RTL Source',
+    downloadPath: 'downloads/UART_Controller_RTL.zip',
+    downloadCount: 12,
+    description: 'Synthesizable, parametric UART controller with flow control, FIFO buffers, and CDC synchronizers.'
+  },
+  {
+    id: 'cache-rtl-src',
+    name: 'MESI Cache Memory Controller',
+    category: 'RTL',
+    icon: 'code',
+    version: '1.1.0',
+    size: '56 KB',
+    status: 'Restricted',
+    fileType: 'SystemVerilog / RTL Source',
+    downloadPath: 'downloads/Cache_Controller_RTL.zip',
+    downloadCount: 28,
+    description: '4-way set-associative cache memory controller with hardware MESI coherence snooping logic.'
+  },
+  {
+    id: '8-bit-cpu-rtl-src',
+    name: '8-Bit CPU Core Layout',
+    category: 'Layouts',
+    icon: 'layers',
+    version: '1.0.0',
+    size: '8.4 MB',
+    status: 'Restricted',
+    fileType: 'DEF / Gerber files',
+    downloadPath: 'downloads/8Bit_CPU_Layout.zip',
+    downloadCount: 19,
+    description: 'Complete PCB schematics, Gerber production files, and synthesizable RTL simulation files for the custom 8-bit CPU.'
   }
 ];

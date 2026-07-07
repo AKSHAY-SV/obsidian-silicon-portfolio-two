@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-const ALLOWED_PROJECT_SLUGS = ["5-stage-pipeline-riscv", "5-stage-soc", "rv32im-soc-processor"];
+const ALLOWED_PROJECT_SLUGS = ["5-stage-pipeline-riscv", "5-stage-soc", "rv32im-soc-processor", "uart", "cache-memory", "8-bit-cpu"];
 const SUB_DIRECTORIES = [
   "simulation",
   "synthesis",
@@ -47,6 +47,11 @@ export default async function handler(req: any, res: any) {
         dirPath: path.join(process.cwd(), "5-stage-soc"),
         servingPrefix: "5-stage-soc"
       });
+    } else if (project === "uart" || project === "cache-memory" || project === "8-bit-cpu") {
+      scanTargets.push({
+        dirPath: path.join(process.cwd(), "public", "projects", project),
+        servingPrefix: project
+      });
     } else {
       scanTargets.push({
         dirPath: path.join(process.cwd(), project),
@@ -68,7 +73,7 @@ export default async function handler(req: any, res: any) {
       for (const subdir of SUB_DIRECTORIES) {
         // Map asset category to actual disk directory name
         let diskSubdir = subdir;
-        if (subdir === "simulation" && target.servingPrefix === "rv32im-soc-processor") {
+        if (subdir === "simulation" && (target.servingPrefix === "rv32im-soc-processor" || target.servingPrefix === "uart" || target.servingPrefix === "cache-memory" || target.servingPrefix === "8-bit-cpu")) {
           diskSubdir = "waveforms";
         }
 

@@ -121,5 +121,41 @@
     "rtl": [],
     "block-diagram": [],
     "documentation": []
+  },
+  "uart": {
+    "simulation": [],
+    "synthesis": [],
+    "timing": [],
+    "layout": [],
+    "floorplan": [],
+    "gds": [],
+    "gdsii": [],
+    "rtl": [],
+    "block-diagram": [],
+    "documentation": []
+  },
+  "cache-memory": {
+    "simulation": [],
+    "synthesis": [],
+    "timing": [],
+    "layout": [],
+    "floorplan": [],
+    "gds": [],
+    "gdsii": [],
+    "rtl": [],
+    "block-diagram": [],
+    "documentation": []
+  },
+  "8-bit-cpu": {
+    "simulation": [],
+    "synthesis": [],
+    "timing": [],
+    "layout": [],
+    "floorplan": [],
+    "gds": [],
+    "gdsii": [],
+    "rtl": [],
+    "block-diagram": [],
+    "documentation": []
   }
 }

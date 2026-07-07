@@ -38,7 +38,7 @@ export const DETAILED_PROJECTS: ProjectDetail[] = [
     simulation: 'Co-simulation run inside VCS and Verilator. Compilation traces verified against instruction-level logs to prove cycle-accurate execution matching.',
     documentation: 'Includes register maps, pad-ring layouts, pinouts descriptions, SDC constraint rules, synthesis gate summaries, and timing sign-off reports.',
     waveforms: 'AXI4 bus write transaction waves illustrating address, data, and handshakes synchronization during multi-beat burst writes.',
-    diagram: '/assets/projects/5-stage-soc/block-diagram/block-diagram.png',
+    diagram: '/projects/5-stage-soc/block-diagram.png',
     futureImprovements: 'Implementing directory-based L2 coherency models to support scaling beyond 8 core clusters.'
   },
   {
@@ -78,7 +78,127 @@ export const DETAILED_PROJECTS: ProjectDetail[] = [
     simulation: 'Verilator compilation logs, functional waveform plots, and cycle-by-cycle register trace logs viewing register status.',
     documentation: 'Instruction timing matrices, forwarding state logic schematics, and pin description tables.',
     waveforms: 'Pipeline forwarding transactions illustrating EX-to-ID and MEM-to-ID data bypassing under back-to-back mathematical operations.',
-    diagram: '/assets/projects/5-stage-pipeline-riscv/block-diagram/block-diagram.png',
+    diagram: '/projects/5-stage-pipeline-riscv/block-diagram.png',
     futureImprovements: 'Transitioning to a superscalar dual-issue instruction pipeline to scale execution performance beyond 1.0 IPC.'
+  },
+  {
+    id: 'uart',
+    slug: 'uart',
+    name: 'UART Controller',
+    tagline: 'Fully-Parametric UART IP Core with Configurable FIFO & Flow Control',
+    category: 'Digital IP',
+    image: 'https://images.unsplash.com/photo-1601524909162-be87252be298?q=80&w=600&auto=format&fit=crop',
+    techStack: ['SystemVerilog', 'Verilator', 'C++ Testbench', 'FPGA (Artix-7)', 'OpenSTA'],
+    description: 'A highly robust, parameterized UART controller with configurable baud rate, data bits, parity modes, stop bits, and independent transmitter/receiver FIFO queues supporting automatic RTS/CTS flow control.',
+    metrics: [
+      { label: 'Baud Rate Support', value: 'Configurable up to 12.5 Mbps' },
+      { label: 'FIFO Size', value: 'Configurable (16 to 256-byte queues)' },
+      { label: 'Gate Count', value: '~2,500 Gates' },
+      { label: 'Power Draw', value: '< 5 mW @ 100MHz' },
+      { label: 'Interface Type', value: 'APB Slave' }
+    ],
+    designObjectives: [
+      'Implement a fully synthesizable UART IP core supporting customizable word lengths, parity modes, and stop bits.',
+      'Integrate hardware-based flow control (RTS/CTS) with programmable watermarks to prevent buffer overruns.',
+      'Maintain robust clock-domain crossing synchronization between bus clock and peripheral clock.',
+      'Optimize design for minimum silicon area and zero CDC violations.'
+    ],
+    features: [
+      'Configurable 5, 6, 7, or 8-bit word length with optional Odd/Even/No parity check.',
+      'Dual independent FIFO buffers for transmit and receive paths with programmable interrupts.',
+      'RTS/CTS automatic hardware flow control preventing receiver buffer overrun.',
+      'Digital filtering on receiver line to suppress noise glitches.',
+      'Standard APB register interface for seamless SoC integration.'
+    ],
+    overview: 'This project provides a standard-compliant, parameterized UART peripheral core designed in SystemVerilog. Configured with separate transmit/receive pipelines and parameterized depth FIFOs, the controller meets high-performance CDC constraints and includes digital glitch filtering for high-noise industrial environments.',
+    architecture: 'Features a standard APB slave interface for control register and FIFO buffer accesses. State machines drive independent transmitter and receiver modules, synced to a baud rate generator divider register. Interrupts trigger on FIFO status thresholds.',
+    challenges: 'Baud rate oversampling mismatch and high-frequency line noise during high-speed UART transactions caused receiver frame errors and character loss.',
+    solutions: 'Implemented a 16x oversampling receiver state machine with a majority-voting filter to sample incoming bits, and added configurable watermarks on the RX FIFO to trigger early interrupt alerts.',
+    verification: 'Validated using a comprehensive SystemVerilog testbench simulating various line delay, noise injection, clock jitter, and random baud-rate mismatches.',
+    simulation: 'Simulated in Verilator with a C++ runtime test harness plotting byte-by-byte status waveforms and checking framing parity assertions.',
+    documentation: 'Includes register mapping configurations, timing diagrams for start/stop framing, and Synthesis/OpenSTA summaries.',
+    waveforms: 'Tx/Rx framing waveforms showing start bit, 8 data bits, parity, stop bit, and RTS/CTS toggle.',
+    diagram: '/projects/uart/block-diagram.png',
+    futureImprovements: 'Adding automatic baud rate detection and DMA interface support for high-throughput block data transfers.'
+  },
+  {
+    id: 'cache-memory',
+    slug: 'cache-memory',
+    name: 'Cache Memory Controller',
+    tagline: 'Non-Blocking L1/L2 Cache Controller with MESI Coherency Protocol',
+    category: 'Digital IP',
+    image: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?q=80&w=600&auto=format&fit=crop',
+    techStack: ['SystemVerilog', 'Verilator', 'OpenROAD', 'Synopsys Design Compiler', 'Cadence Innovus'],
+    description: 'A high-performance, non-blocking 4-way set-associative cache memory controller featuring a MESI cache coherency engine, lookahead prefetching, and configurable write-back/write-allocate architectures.',
+    metrics: [
+      { label: 'Associativity', value: '4-Way Set Associative' },
+      { label: 'Coherency Protocol', value: 'MESI Snooping Controller' },
+      { label: 'Line Size', value: '64 Bytes Cache Lines' },
+      { label: 'Hit Latency', value: '1 Cycle Tag Match' },
+      { label: 'System Interface', value: '128-bit AXI4 Master' }
+    ],
+    designObjectives: [
+      'Implement a 4-way set associative L1 cache controller with non-blocking miss handling.',
+      'Enforce multi-core coherency via a hardware MESI snooping engine.',
+      'Optimize critical path in Tag Match to achieve target frequency closure above 800MHz.',
+      'Integrate lookahead stride prefetcher to reduce average memory access time (AMAT).'
+    ],
+    features: [
+      'Fully-associative LRU (Least Recently Used) replacement policy implemented in logic.',
+      'Non-blocking cache architecture with dual Miss Status Holding Registers (MSHR).',
+      'MESI Coherency snooping interface for quad-core system fabrics.',
+      'Write-back and write-allocate policy supporting burst AXI4 transfers.',
+      'Parameterizable cache line and tag sizes to scale across application requirements.'
+    ],
+    overview: 'This Cache Controller represents a high-speed memory sub-system IP designed to minimize core stall cycles. Implemented with set-associative SRAM tag lookup arrays, the controller implements MESI snooping rules to support multi-processor cluster integration. Non-blocking accesses allow hits to bypass outstanding miss requests.',
+    architecture: 'Features parallel Tag and Data SRAM macros arrays lookup. The MESI control logic registers incoming snoop requests and transitions line states concurrently. Memory request buffers interface directly to an AXI4 system master.',
+    challenges: 'High-frequency tag match comparisons on 4-way parallel sets created critical path timing violations, limiting system clock frequency.',
+    solutions: 'Pipelined the tag comparison step and split set selection into a dedicated pre-decode cycle, meeting the 800MHz timing budget without increasing access latency.',
+    verification: 'Rigorous verification using dynamic trace generators feeding randomized address streams, stress-testing eviction loops and MESI state Transitions.',
+    simulation: 'Verilator and VCS co-simulations verifying snooping transitions and cache fill burst transactions against custom memory models.',
+    documentation: 'Registers config, state-transition diagram, timing sign-off reports, and power reports.',
+    waveforms: 'Read-miss/write-miss line fill cycles showing MESI transition from Invalid to Shared/Modified and AXI4 burst handshakes.',
+    diagram: '/projects/cache-memory/block-diagram.png',
+    futureImprovements: 'Adding pseudo-LRU policies and integrating dynamic write-through bypassing for streaming workloads.'
+  },
+  {
+    id: '8-bit-cpu',
+    slug: '8-bit-cpu',
+    name: '8-Bit CPU & Custom Computer',
+    tagline: 'A complete discrete-logic TTL-equivalent 8-Bit Computer',
+    category: 'Computer Arch',
+    image: 'https://images.unsplash.com/photo-1555664424-778a1e5e1b48?q=80&w=600&auto=format&fit=crop',
+    techStack: ['SystemVerilog', 'Logisim', 'KiCAD', 'Verilator', 'FPGA (Artix-7)'],
+    description: 'A custom 8-bit discrete-logic computer architecture featuring an 8-bit ALU, register file, microprogrammed control unit, memory controller, and a custom instruction set (assembly-programmable).',
+    metrics: [
+      { label: 'Bus Width', value: '8-bit Data / 16-bit Addr' },
+      { label: 'Instruction Set', value: 'Custom 32 assembly opcodes' },
+      { label: 'Register Count', value: '4 General Purpose' },
+      { label: 'Control Method', value: 'Microcoded Control ROM' },
+      { label: 'Memory Limit', value: '64 KB Addressable space' }
+    ],
+    designObjectives: [
+      'Design a microprogrammed 8-bit computer from fundamental digital logic components.',
+      'Build a modular architecture comprising Register File, ALU, Control Unit, and I/O registers.',
+      'Develop a custom instruction set architecture (ISA) with fully functioning assembler.',
+      'Synthesize onto FPGA and implement a physical PCB prototype for hardware validation.'
+    ],
+    features: [
+      'Microcoded control ROM allowing easy updates to execution micro-steps.',
+      'Four 8-bit general-purpose registers and a 16-bit Program Counter (PC).',
+      '8-bit ALU with Carry, Zero, Negative, and Overflow flags.',
+      'Direct, Indirect, and Immediate addressing modes.',
+      'Integrated 7-segment display interface for program monitoring and debug outputs.'
+    ],
+    overview: 'This project implements a classic 8-bit computer architecture, capturing the essence of early computing systems. Designed with modular blocks modeled after classic TTL components, the CPU operates under custom microprogrammed instructions and executes user assemblies loaded from flash or ROM.',
+    architecture: 'Features a single unified internal 8-bit data bus connecting the Accumulator, general-purpose registers, ALU, and Instruction Register. A separate 16-bit address bus drives memory decoding. Microinstructions are fetched from a microcode control ROM.',
+    challenges: 'Bus contention and signal glitches during clock edge transitions caused unstable instruction execution under physical breadboard/FPGA setups.',
+    solutions: 'Strictly synchronized all bus-enable control signals to a non-overlapping clock phase model and added active high-impedance state protections during transitions.',
+    verification: 'Verified in Logisim-evolution block-level simulation, followed by comprehensive Verilator compilation and assembly test scripts.',
+    simulation: 'Waveform analysis of bus transactions showing PC increment, address latching, instruction fetch, and ALU writebacks.',
+    documentation: 'Microcode ROM maps, assembly opcode references, instruction execution step tables, and PCB schematics.',
+    waveforms: 'Instruction fetch cycle showing Program Counter latching, memory read data on bus, and instruction load registers.',
+    diagram: '/projects/8-bit-cpu/block-diagram.png',
+    futureImprovements: 'Adding hardware-level interrupts and a dedicated UART serial interface.'
   }
 ];

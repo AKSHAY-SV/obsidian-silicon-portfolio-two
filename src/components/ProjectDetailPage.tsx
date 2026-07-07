@@ -207,7 +207,10 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
   const getProjectAsset = () => {
     const mapping: Record<string, string> = {
       '5-stage-soc': 'rv32im-rtl-src',
-      '5-stage-pipeline-riscv': 'rv32im-floorplan-def'
+      '5-stage-pipeline-riscv': 'rv32im-floorplan-def',
+      'uart': 'uart-rtl-src',
+      'cache-memory': 'cache-rtl-src',
+      '8-bit-cpu': '8-bit-cpu-rtl-src'
     };
     const assetId = mapping[project.id] || mapping[slug];
     if (!assetId) return null;
@@ -567,7 +570,7 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
                 <div className="flex flex-col items-center justify-center py-12 px-6 rounded-xl border border-dashed border-slate-800 bg-[#040406]/30 text-center space-y-3">
                   <Waves className="h-8 w-8 text-slate-600 animate-pulse" />
                   <p className="font-mono text-xs uppercase tracking-widest text-slate-500">
-                    Functional verification waveforms will appear here.
+                    No Functional Verification uploaded.
                   </p>
                 </div>
               ) : (
@@ -701,7 +704,7 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
                 <div className="flex flex-col items-center justify-center py-12 px-6 rounded-xl border border-dashed border-slate-800 bg-[#040406]/30 text-center space-y-3">
                   <Clock className="h-8 w-8 text-slate-600 animate-pulse" />
                   <p className="font-mono text-xs uppercase tracking-widest text-slate-500">
-                    No Timing Report uploaded.
+                    No Timing Analysis uploaded.
                   </p>
                 </div>
               ) : (
@@ -981,7 +984,7 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
                 <div className="flex flex-col items-center justify-center py-12 px-6 rounded-xl border border-dashed border-slate-800 bg-[#040406]/30 text-center space-y-3">
                   <Activity className="h-8 w-8 text-slate-600 animate-pulse" />
                   <p className="font-mono text-xs uppercase tracking-widest text-slate-500">
-                    No GDSII image uploaded.
+                    No GDSII uploaded.
                   </p>
                 </div>
               ) : (
