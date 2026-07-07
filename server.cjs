@@ -23,9 +23,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 
 // server.ts
 var import_express = __toESM(require("express"), 1);
-var import_path3 = __toESM(require("path"), 1);
+var import_path2 = __toESM(require("path"), 1);
 var import_vite = require("vite");
-var import_dotenv7 = __toESM(require("dotenv"), 1);
+var import_dotenv8 = __toESM(require("dotenv"), 1);
 
 // api/send-email.ts
 var import_nodemailer = __toESM(require("nodemailer"), 1);
@@ -587,12 +587,50 @@ async function handler4(req, res) {
   }
 }
 
-// api/downloads/request-download.ts
-var import_crypto2 = __toESM(require("crypto"), 1);
+// api/downloads/check-request.ts
 var import_dotenv4 = __toESM(require("dotenv"), 1);
 import_dotenv4.default.config();
 var db4 = adminDb;
 async function handler5(req, res) {
+  if (req.method !== "GET") {
+    res.setHeader("Allow", ["GET"]);
+    return res.status(405).json({ success: false, error: "Method not allowed. Use GET." });
+  }
+  const { email } = req.query;
+  if (!email || typeof email !== "string") {
+    return res.status(400).json({ success: false, error: "Missing or invalid email parameter." });
+  }
+  const normalizedEmail = email.trim().toLowerCase();
+  try {
+    const querySnapshot = await db4.collection("portfolio_access_requests").where("email", "==", normalizedEmail).orderBy("createdAt", "desc").limit(1).get();
+    if (querySnapshot.empty) {
+      return res.status(200).json({
+        success: true,
+        request: null
+      });
+    }
+    const docSnap = querySnapshot.docs[0];
+    const data = docSnap.data();
+    return res.status(200).json({
+      success: true,
+      request: {
+        id: docSnap.id,
+        email: data.email,
+        status: data.status
+      }
+    });
+  } catch (error) {
+    console.error("[Check Request Status Error]", error);
+    return res.status(500).json({ success: false, error: "Internal database query failure." });
+  }
+}
+
+// api/downloads/request-download.ts
+var import_crypto2 = __toESM(require("crypto"), 1);
+var import_dotenv5 = __toESM(require("dotenv"), 1);
+import_dotenv5.default.config();
+var db5 = adminDb;
+async function handler6(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
     return res.status(405).json({ success: false, error: "Method not allowed. Use POST." });
@@ -602,7 +640,7 @@ async function handler5(req, res) {
     return res.status(400).json({ success: false, error: "Missing token or projectId." });
   }
   try {
-    const querySnapshot = await db4.collection("portfolio_access_requests").where("portalToken", "==", token).where("status", "==", "approved").get();
+    const querySnapshot = await db5.collection("portfolio_access_requests").where("portalToken", "==", token).where("status", "==", "approved").get();
     if (querySnapshot.empty) {
       return res.status(403).json({ success: false, error: "Unauthorized: Invalid or revoked portal token." });
     }
@@ -615,7 +653,7 @@ async function handler5(req, res) {
     }
     const downloadToken = import_crypto2.default.randomBytes(24).toString("hex");
     const expiresAt = new Date(Date.now() + 10 * 60 * 1e3);
-    await db4.collection("download_tokens").add({
+    await db5.collection("download_tokens").add({
       token: downloadToken,
       requestId,
       projectId: projectId2,
@@ -635,17 +673,19 @@ async function handler5(req, res) {
 }
 
 // api/downloads/serve.ts
-var import_fs = __toESM(require("fs"), 1);
-var import_path = __toESM(require("path"), 1);
-var import_dotenv5 = __toESM(require("dotenv"), 1);
-import_dotenv5.default.config();
-var db5 = adminDb;
+var import_dotenv6 = __toESM(require("dotenv"), 1);
+var import_stream = require("stream");
+import_dotenv6.default.config();
+var db6 = adminDb;
 var PROJECT_FILES = {
   "rv32im-rtl-src": "SoC with Custom RISC-V Processor.zip",
   "axi4-crossbar-test": "APB Compliant UART Peripheral with Integrated FSM.zip",
+  "uart-rtl-src": "APB Compliant UART Peripheral with Integrated FSM.zip",
   "rv32im-floorplan-def": "RV32IM 5-Stage Pipeline.zip",
   "8-bit-cpu": "8 Bit CPU.zip",
-  "l2-cache-gate-netlist": "Cache Memory.zip"
+  "8-bit-cpu-rtl-src": "8 Bit CPU.zip",
+  "l2-cache-gate-netlist": "Cache Memory.zip",
+  "cache-rtl-src": "Cache Memory.zip"
 };
 function renderErrorPage(res, status, title, message) {
   res.status(status).send(`
@@ -699,7 +739,7 @@ function renderErrorPage(res, status, title, message) {
     </html>
   `);
 }
-async function handler6(req, res) {
+async function handler7(req, res) {
   if (req.method !== "GET") {
     res.setHeader("Allow", ["GET"]);
     return res.status(405).json({ success: false, error: "Method not allowed. Use GET." });
@@ -711,13 +751,13 @@ async function handler6(req, res) {
   const userIP = req.headers["x-forwarded-for"] || req.socket.remoteAddress || "Unknown IP";
   const userAgent = req.headers["user-agent"] || "Unknown Browser";
   try {
-    const querySnapshot = await db5.collection("download_tokens").where("token", "==", downloadToken).get();
+    const querySnapshot = await db6.collection("download_tokens").where("token", "==", downloadToken).get();
     if (querySnapshot.empty) {
       return renderErrorPage(res, 403, "Access Forbidden", "The specified token does not exist, has expired, or has been revoked.");
     }
     const tokenDoc = querySnapshot.docs[0];
     const tokenData = tokenDoc.data();
-    const tokenDocRef = db5.collection("download_tokens").doc(tokenDoc.id);
+    const tokenDocRef = db6.collection("download_tokens").doc(tokenDoc.id);
     const { requestId, projectId: projectId2, expiresAt, downloadCount, used, maxDownloads } = tokenData;
     const now = firebaseAdmin_default.firestore.Timestamp.now();
     const isExpired = expiresAt && now.seconds > expiresAt.seconds;
@@ -727,12 +767,12 @@ async function handler6(req, res) {
         await tokenDocRef.update({ used: true });
       }
       try {
-        const reqDocRef = db5.collection("portfolio_access_requests").doc(requestId);
+        const reqDocRef = db6.collection("portfolio_access_requests").doc(requestId);
         const reqDocSnap = await reqDocRef.get();
         const reqData = reqDocSnap.exists ? reqDocSnap.data() : {};
         const email2 = reqData?.email || "unknown@user.com";
         const university2 = reqData?.university || "Unknown University";
-        await db5.collection("download_logs").add({
+        await db6.collection("download_logs").add({
           requestId,
           email: email2,
           university: university2,
@@ -752,10 +792,21 @@ async function handler6(req, res) {
     if (!fileName) {
       return renderErrorPage(res, 404, "Resource Missing", "The requested project asset is not configured or could not be found.");
     }
-    const filePath = import_path.default.join(process.cwd(), "public", "downloads", fileName);
-    if (!import_fs.default.existsSync(filePath)) {
-      console.error(`File not found on disk: ${filePath}`);
-      return renderErrorPage(res, 404, "Asset Offline", "The file is physically missing from our engineering directory.");
+    const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+    const GITHUB_OWNER = process.env.GITHUB_OWNER;
+    const GITHUB_PRIVATE_REPO = process.env.GITHUB_PRIVATE_REPO || "obsidian-private-assets";
+    if (!GITHUB_TOKEN || !GITHUB_OWNER || !GITHUB_PRIVATE_REPO) {
+      const missingVars = [];
+      if (!GITHUB_TOKEN) missingVars.push("GITHUB_TOKEN");
+      if (!GITHUB_OWNER) missingVars.push("GITHUB_OWNER");
+      if (!GITHUB_PRIVATE_REPO) missingVars.push("GITHUB_PRIVATE_REPO");
+      console.error(`Missing required GitHub environment configuration: ${missingVars.join(", ")}`);
+      return renderErrorPage(
+        res,
+        500,
+        "Server Configuration Error",
+        `The server is missing the required GitHub environment configuration: ${missingVars.join(", ")}.`
+      );
     }
     const nextCount = (downloadCount || 0) + 1;
     await tokenDocRef.update({
@@ -765,7 +816,7 @@ async function handler6(req, res) {
     let email = "unknown@user.com";
     let university = "Unknown University";
     try {
-      const reqDocRef = db5.collection("portfolio_access_requests").doc(requestId);
+      const reqDocRef = db6.collection("portfolio_access_requests").doc(requestId);
       const reqDocSnap = await reqDocRef.get();
       if (reqDocSnap.exists) {
         const rData = reqDocSnap.data();
@@ -775,7 +826,7 @@ async function handler6(req, res) {
     } catch (dbErr) {
       console.warn("Could not retrieve request details for audit logging", dbErr);
     }
-    await db5.collection("download_logs").add({
+    await db6.collection("download_logs").add({
       requestId,
       email,
       university,
@@ -788,14 +839,76 @@ async function handler6(req, res) {
     });
     res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
     res.setHeader("Content-Type", "application/zip");
-    const fileStream = import_fs.default.createReadStream(filePath);
-    fileStream.on("error", (err) => {
-      console.error("Stream pipe error:", err);
-      if (!res.headersSent) {
-        return renderErrorPage(res, 500, "Streaming Failure", "A server error occurred while transferring files.");
+    let response;
+    try {
+      const url1 = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_PRIVATE_REPO}/contents/public/downloads/${encodeURIComponent(fileName)}`;
+      response = await fetch(url1, {
+        headers: {
+          "Authorization": `token ${GITHUB_TOKEN}`,
+          "Accept": "application/vnd.github.v3.raw",
+          "User-Agent": "Obsidian-Silicon-Portfolio"
+        }
+      });
+      if (response.status === 404) {
+        const url2 = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_PRIVATE_REPO}/contents/downloads/${encodeURIComponent(fileName)}`;
+        response = await fetch(url2, {
+          headers: {
+            "Authorization": `token ${GITHUB_TOKEN}`,
+            "Accept": "application/vnd.github.v3.raw",
+            "User-Agent": "Obsidian-Silicon-Portfolio"
+          }
+        });
       }
-    });
-    fileStream.pipe(res);
+      if (response.status === 404) {
+        const url3 = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_PRIVATE_REPO}/contents/${encodeURIComponent(fileName)}`;
+        response = await fetch(url3, {
+          headers: {
+            "Authorization": `token ${GITHUB_TOKEN}`,
+            "Accept": "application/vnd.github.v3.raw",
+            "User-Agent": "Obsidian-Silicon-Portfolio"
+          }
+        });
+      }
+    } catch (fetchErr) {
+      console.error("[GitHub Connection Failed]", fetchErr);
+      return renderErrorPage(
+        res,
+        500,
+        "GitHub Integration Error",
+        `Failed to establish connection with private repository: ${fetchErr.message || fetchErr}`
+      );
+    }
+    if (!response.ok) {
+      console.error(`GitHub API returned error: ${response.status} ${response.statusText}`);
+      let errorMessage = `Failed to retrieve the file from the private engineering repository. HTTP Status: ${response.status} ${response.statusText}`;
+      try {
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+        }
+        if (errorData && errorData.message) {
+          errorMessage += ` - GitHub Details: ${errorData.message}`;
+        } else if (errorText && errorText.length < 200) {
+          errorMessage += ` - Details: ${errorText}`;
+        }
+      } catch (e) {
+      }
+      return renderErrorPage(
+        res,
+        response.status === 403 || response.status === 401 ? 403 : 500,
+        "Asset Offline",
+        errorMessage
+      );
+    }
+    if (response.body) {
+      import_stream.Readable.fromWeb(response.body).pipe(res);
+    } else {
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      res.send(buffer);
+    }
   } catch (error) {
     console.error("[Serve Download Error]", error);
     return renderErrorPage(res, 500, "Server Error", `An internal error occurred: ${error.message}`);
@@ -803,10 +916,10 @@ async function handler6(req, res) {
 }
 
 // api/downloads/analytics.ts
-var import_dotenv6 = __toESM(require("dotenv"), 1);
-import_dotenv6.default.config();
-var db6 = adminDb;
-async function handler7(req, res) {
+var import_dotenv7 = __toESM(require("dotenv"), 1);
+import_dotenv7.default.config();
+var db7 = adminDb;
+async function handler8(req, res) {
   if (req.method !== "GET") {
     res.setHeader("Allow", ["GET"]);
     return res.status(405).json({ success: false, error: "Method not allowed. Use GET." });
@@ -831,7 +944,7 @@ async function handler7(req, res) {
     return res.status(403).json({ success: false, error: "Forbidden: Unauthorized administrator email." });
   }
   try {
-    const querySnapshot = await db6.collection("download_logs").orderBy("downloadTime", "desc").get();
+    const querySnapshot = await db7.collection("download_logs").orderBy("downloadTime", "desc").get();
     const logs = [];
     querySnapshot.forEach((docSnap) => {
       const d = docSnap.data();
@@ -925,8 +1038,8 @@ async function handler7(req, res) {
 }
 
 // api/projects/assets.ts
-var import_fs2 = __toESM(require("fs"), 1);
-var import_path2 = __toESM(require("path"), 1);
+var import_fs = __toESM(require("fs"), 1);
+var import_path = __toESM(require("path"), 1);
 var ALLOWED_PROJECT_SLUGS = ["5-stage-pipeline-riscv", "rv32im-soc-processor", "uart", "cache-memory", "8-bit-cpu"];
 var LOGICAL_KEYS = [
   "simulation",
@@ -955,7 +1068,7 @@ var KEY_TO_DISK_FOLDERS = {
   downloads: ["downloads"]
 };
 var SUPPORTED_EXTENSIONS = [".png", ".jpg", ".jpeg", ".svg", ".webp", ".pdf", ".zip", ".v", ".sv", ".chisel"];
-async function handler8(req, res) {
+async function handler9(req, res) {
   if (req.method !== "GET") {
     res.setHeader("Allow", ["GET"]);
     return res.status(405).json({ success: false, error: "Method not allowed. Use GET." });
@@ -970,13 +1083,13 @@ async function handler8(req, res) {
   try {
     const scanTargets = [];
     scanTargets.push({
-      dirPath: import_path2.default.join(process.cwd(), "public", "projects", project),
+      dirPath: import_path.default.join(process.cwd(), "public", "projects", project),
       servingPrefix: project
     });
     if (project === "5-stage-pipeline-riscv") {
       scanTargets.push({
-        dirPath: import_path2.default.join(process.cwd(), "public", "projects", "rv32im-core"),
-        servingPrefix: "5-stage-pipeline-riscv"
+        dirPath: import_path.default.join(process.cwd(), "public", "projects", "rv32im-soc-processor"),
+        servingPrefix: "rv32im-soc-processor"
       });
     }
     const assetsMap = {};
@@ -984,18 +1097,18 @@ async function handler8(req, res) {
       assetsMap[key] = [];
     }
     for (const target of scanTargets) {
-      if (!import_fs2.default.existsSync(target.dirPath)) continue;
+      if (!import_fs.default.existsSync(target.dirPath)) continue;
       for (const logicalKey of LOGICAL_KEYS) {
         const diskFolders = KEY_TO_DISK_FOLDERS[logicalKey] || [logicalKey];
         for (const diskSubdir of diskFolders) {
-          const subdirPath = import_path2.default.join(target.dirPath, diskSubdir);
-          if (import_fs2.default.existsSync(subdirPath)) {
-            const files = await import_fs2.default.promises.readdir(subdirPath);
+          const subdirPath = import_path.default.join(target.dirPath, diskSubdir);
+          if (import_fs.default.existsSync(subdirPath)) {
+            const files = await import_fs.default.promises.readdir(subdirPath);
             for (const file of files) {
-              const ext = import_path2.default.extname(file).toLowerCase();
+              const ext = import_path.default.extname(file).toLowerCase();
               if (SUPPORTED_EXTENSIONS.includes(ext)) {
-                const filePath = import_path2.default.join(subdirPath, file);
-                const stats = await import_fs2.default.promises.stat(filePath);
+                const filePath = import_path.default.join(subdirPath, file);
+                const stats = await import_fs.default.promises.stat(filePath);
                 if (stats.isDirectory()) continue;
                 const sizeInBytes = stats.size;
                 let sizeStr = `${sizeInBytes} B`;
@@ -1015,14 +1128,14 @@ async function handler8(req, res) {
           }
         }
       }
-      const rootFiles = await import_fs2.default.promises.readdir(target.dirPath);
+      const rootFiles = await import_fs.default.promises.readdir(target.dirPath);
       for (const file of rootFiles) {
         const lowerFile = file.toLowerCase();
         if (lowerFile.includes("block-diagram") || lowerFile.includes("block_diagram") || lowerFile.includes("diagram")) {
-          const ext = import_path2.default.extname(file).toLowerCase();
+          const ext = import_path.default.extname(file).toLowerCase();
           if (SUPPORTED_EXTENSIONS.includes(ext)) {
-            const filePath = import_path2.default.join(target.dirPath, file);
-            const stats = await import_fs2.default.promises.stat(filePath);
+            const filePath = import_path.default.join(target.dirPath, file);
+            const stats = await import_fs.default.promises.stat(filePath);
             if (stats.isFile()) {
               const sizeInBytes = stats.size;
               let sizeStr = `${sizeInBytes} B`;
@@ -1055,7 +1168,7 @@ async function handler8(req, res) {
 }
 
 // server.ts
-import_dotenv7.default.config();
+import_dotenv8.default.config();
 var app = (0, import_express.default)();
 var PORT = process.env.PORT ? parseInt(process.env.PORT) : 3e3;
 app.use(import_express.default.json());
@@ -1069,13 +1182,14 @@ app.post("/api/send-email", handler);
 app.post("/api/admin/request-action", handler2);
 app.get("/api/admin/audit-logs", handler3);
 app.get("/api/downloads/init", handler4);
-app.post("/api/downloads/request-download", handler5);
-app.get("/api/downloads/serve", handler6);
-app.get("/api/downloads/analytics", handler7);
-app.use("/assets/projects/5-stage-pipeline-riscv", import_express.default.static(import_path3.default.join(process.cwd(), "public", "projects", "5-stage-pipeline-riscv")));
-app.use("/assets/projects/5-stage-pipeline-riscv", import_express.default.static(import_path3.default.join(process.cwd(), "public", "projects", "rv32im-core")));
-app.use("/assets/projects", import_express.default.static(import_path3.default.join(process.cwd(), "public", "projects")));
-app.get("/api/projects/assets", handler8);
+app.get("/api/downloads/check-request", handler5);
+app.post("/api/downloads/request-download", handler6);
+app.get("/api/downloads/serve", handler7);
+app.get("/api/downloads/analytics", handler8);
+app.use("/assets/projects/5-stage-pipeline-riscv", import_express.default.static(import_path2.default.join(process.cwd(), "public", "projects", "5-stage-pipeline-riscv")));
+app.use("/assets/projects/5-stage-pipeline-riscv", import_express.default.static(import_path2.default.join(process.cwd(), "public", "projects", "rv32im-core")));
+app.use("/assets/projects", import_express.default.static(import_path2.default.join(process.cwd(), "public", "projects")));
+app.get("/api/projects/assets", handler9);
 async function bootstrap() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await (0, import_vite.createServer)({
@@ -1085,10 +1199,10 @@ async function bootstrap() {
     app.use(vite.middlewares);
     console.log("[Dev Server] Vite middleware integrated successfully.");
   } else {
-    const distPath = import_path3.default.join(process.cwd(), "dist");
+    const distPath = import_path2.default.join(process.cwd(), "dist");
     app.use(import_express.default.static(distPath));
     app.get("*", (req, res) => {
-      res.sendFile(import_path3.default.join(distPath, "index.html"));
+      res.sendFile(import_path2.default.join(distPath, "index.html"));
     });
     console.log("[Prod Server] Static files serving from dist/ folder.");
   }
