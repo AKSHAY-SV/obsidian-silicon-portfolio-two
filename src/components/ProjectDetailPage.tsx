@@ -20,7 +20,6 @@ const FIVE_STAGE_SOC_SLUGS = new Set([
   'rv32im-soc-processor',
   'five-stage-pipeline',
   'five-stage-pipe',
-  'rv32im-soc-processor',
   '5-stage-pipeline-riscv',
 ]);
 

@@ -146,7 +146,7 @@ always @(*) begin
 end`
   },
   {
-    id: '5-stage-soc',
+    id: 'rv32im-soc-processor',
     name: '5-Stage SoC with Custom RISC-V Processor',
     category: 'ASIC',
     tagline: '5-Stage Pipelined RISC-V Processor System on Chip (7nm FinFET)',

@@ -40,7 +40,7 @@
     ]
   },
   {
-    "id": "5-stage-soc",
+    "id": "rv32im-soc-processor",
     "name": "5-Stage SoC with Custom RISC-V Processor",
     "category": "ASIC",
     "tagline": "5-Stage Pipelined RISC-V Processor System on Chip (7nm FinFET)",
@@ -55,7 +55,7 @@
     "complexityScore": 98,
     "domains": ["Computer Architecture", "RTL Design", "ASIC Design", "Physical Design"],
     "quickTags": ["7nm FinFET", "RISC-V", "5-Stage Pipelined"],
-    "githubUrl": "https://github.com/google-deepmind/5-stage-soc",
+    "githubUrl": "https://github.com/google-deepmind/rv32im-soc-processor",
     "specs": [
       { "label": "Process Node", "value": "TSMC 7nm FinFET N7" },
       { "label": "CPU Cluster", "value": "5-Stage Pipelined RV32IM Cores" },

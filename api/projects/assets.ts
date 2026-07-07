@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-const ALLOWED_PROJECT_SLUGS = ["5-stage-pipeline-riscv", "5-stage-soc", "rv32im-soc-processor", "uart", "cache-memory", "8-bit-cpu"];
+const ALLOWED_PROJECT_SLUGS = ["5-stage-pipeline-riscv", "rv32im-soc-processor", "uart", "cache-memory", "8-bit-cpu"];
 const SUB_DIRECTORIES = [
   "simulation",
   "synthesis",
@@ -41,11 +41,6 @@ export default async function handler(req: any, res: any) {
       scanTargets.push({
         dirPath: path.join(process.cwd(), "public", "projects", "rv32im-soc-processor"),
         servingPrefix: "rv32im-soc-processor"
-      });
-    } else if (project === "5-stage-soc") {
-      scanTargets.push({
-        dirPath: path.join(process.cwd(), "5-stage-soc"),
-        servingPrefix: "5-stage-soc"
       });
     } else if (project === "uart" || project === "cache-memory" || project === "8-bit-cpu") {
       scanTargets.push({

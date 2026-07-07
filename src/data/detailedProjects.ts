@@ -2,8 +2,8 @@ import { ProjectDetail } from '../types';
 
 export const DETAILED_PROJECTS: ProjectDetail[] = [
   {
-id: "rv32im-soc-processor",
-slug: "rv32im-soc-processor",
+    id: 'rv32im-soc-processor',
+    slug: 'rv32im-soc-processor',
     name: '5-Stage SoC with Custom RISC-V Processor',
     tagline: '5-Stage Pipelined RISC-V System-on-Chip (7nm FinFET Node)',
     category: 'ASIC',
@@ -38,7 +38,7 @@ slug: "rv32im-soc-processor",
     simulation: 'Co-simulation run inside VCS and Verilator. Compilation traces verified against instruction-level logs to prove cycle-accurate execution matching.',
     documentation: 'Includes register maps, pad-ring layouts, pinouts descriptions, SDC constraint rules, synthesis gate summaries, and timing sign-off reports.',
     waveforms: 'AXI4 bus write transaction waves illustrating address, data, and handshakes synchronization during multi-beat burst writes.',
-    diagram: "/projects/rv32im-soc-processor/block-diagram.png",
+    diagram: '/projects/rv32im-soc-processor/block-diagram.png',
     futureImprovements: 'Implementing directory-based L2 coherency models to support scaling beyond 8 core clusters.'
   },
   {
