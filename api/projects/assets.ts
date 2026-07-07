@@ -37,14 +37,15 @@ export default async function handler(req: any, res: any) {
     // Define all directories to scan for this request
     const scanTargets: Array<{ dirPath: string; servingPrefix: string }> = [];
 
-    if (project === "5-stage-soc" || project === "rv32im-soc-processor") {
-      scanTargets.push({
-        dirPath: path.join(process.cwd(), "5-stage-soc"),
-        servingPrefix: "5-stage-soc"
-      });
+    if (project === "rv32im-soc-processor") {
       scanTargets.push({
         dirPath: path.join(process.cwd(), "public", "projects", "rv32im-soc-processor"),
         servingPrefix: "rv32im-soc-processor"
+      });
+    } else if (project === "5-stage-soc") {
+      scanTargets.push({
+        dirPath: path.join(process.cwd(), "5-stage-soc"),
+        servingPrefix: "5-stage-soc"
       });
     } else {
       scanTargets.push({
@@ -65,7 +66,13 @@ export default async function handler(req: any, res: any) {
       if (!fs.existsSync(target.dirPath)) continue;
 
       for (const subdir of SUB_DIRECTORIES) {
-        const subdirPath = path.join(target.dirPath, subdir);
+        // Map asset category to actual disk directory name
+        let diskSubdir = subdir;
+        if (subdir === "simulation" && target.servingPrefix === "rv32im-soc-processor") {
+          diskSubdir = "waveforms";
+        }
+
+        const subdirPath = path.join(target.dirPath, diskSubdir);
 
         if (fs.existsSync(subdirPath)) {
           const files = await fs.promises.readdir(subdirPath);
@@ -90,7 +97,7 @@ export default async function handler(req: any, res: any) {
 
               assetsMap[subdir].push({
                 name: file,
-                url: `/assets/projects/${target.servingPrefix}/${subdir}/${file}`,
+                url: `/assets/projects/${target.servingPrefix}/${diskSubdir}/${file}`,
                 size: sizeStr
               });
             }
