@@ -955,14 +955,15 @@ async function handler8(req, res) {
   }
   try {
     const scanTargets = [];
-    if (project === "5-stage-soc" || project === "rv32im-soc-processor") {
-      scanTargets.push({
-        dirPath: import_path2.default.join(process.cwd(), "5-stage-soc"),
-        servingPrefix: "5-stage-soc"
-      });
+    if (project === "rv32im-soc-processor") {
       scanTargets.push({
         dirPath: import_path2.default.join(process.cwd(), "public", "projects", "rv32im-soc-processor"),
         servingPrefix: "rv32im-soc-processor"
+      });
+    } else if (project === "5-stage-soc") {
+      scanTargets.push({
+        dirPath: import_path2.default.join(process.cwd(), "5-stage-soc"),
+        servingPrefix: "5-stage-soc"
       });
     } else {
       scanTargets.push({
@@ -977,7 +978,11 @@ async function handler8(req, res) {
     for (const target of scanTargets) {
       if (!import_fs2.default.existsSync(target.dirPath)) continue;
       for (const subdir of SUB_DIRECTORIES) {
-        const subdirPath = import_path2.default.join(target.dirPath, subdir);
+        let diskSubdir = subdir;
+        if (subdir === "simulation" && target.servingPrefix === "rv32im-soc-processor") {
+          diskSubdir = "waveforms";
+        }
+        const subdirPath = import_path2.default.join(target.dirPath, diskSubdir);
         if (import_fs2.default.existsSync(subdirPath)) {
           const files = await import_fs2.default.promises.readdir(subdirPath);
           for (const file of files) {
@@ -995,7 +1000,7 @@ async function handler8(req, res) {
               if (assetsMap[subdir].some((item) => item.name === file)) continue;
               assetsMap[subdir].push({
                 name: file,
-                url: `/assets/projects/${target.servingPrefix}/${subdir}/${file}`,
+                url: `/assets/projects/${target.servingPrefix}/${diskSubdir}/${file}`,
                 size: sizeStr
               });
             }
