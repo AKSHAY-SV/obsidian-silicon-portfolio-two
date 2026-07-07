@@ -1,0 +1,125 @@
+{
+  "axi4-interconnect": {
+    "simulation": [],
+    "synthesis": [],
+    "timing": [],
+    "layout": [],
+    "floorplan": [],
+    "gds": [],
+    "gdsii": [],
+    "rtl": [],
+    "block-diagram": [],
+    "documentation": []
+  },
+  "eight-bit-computer": {
+    "simulation": [],
+    "synthesis": [],
+    "timing": [],
+    "layout": [],
+    "floorplan": [],
+    "gds": [],
+    "gdsii": [],
+    "rtl": [],
+    "block-diagram": [],
+    "documentation": []
+  },
+  "helios-7-soc": {
+    "simulation": [],
+    "synthesis": [],
+    "timing": [],
+    "layout": [],
+    "floorplan": [],
+    "gds": [],
+    "gdsii": [],
+    "rtl": [],
+    "block-diagram": [],
+    "documentation": []
+  },
+  "l2-cache-controller": {
+    "simulation": [],
+    "synthesis": [],
+    "timing": [],
+    "layout": [],
+    "floorplan": [],
+    "gds": [],
+    "gdsii": [],
+    "rtl": [],
+    "block-diagram": [],
+    "documentation": []
+  },
+  "rv32im-core": {
+    "simulation": [],
+    "synthesis": [],
+    "timing": [],
+    "layout": [],
+    "floorplan": [],
+    "gds": [],
+    "gdsii": [],
+    "rtl": [],
+    "block-diagram": [],
+    "documentation": []
+  },
+  "rv32im-soc-processor": {
+    "simulation": [
+      {
+        "name": "apb-bus.png",
+        "url": "/projects/rv32im-soc-processor/waveforms/apb-bus.png",
+        "size": "118.8 KB"
+      },
+      {
+        "name": "complete-soc.png",
+        "url": "/projects/rv32im-soc-processor/waveforms/complete-soc.png",
+        "size": "298.0 KB"
+      },
+      {
+        "name": "cpu.png",
+        "url": "/projects/rv32im-soc-processor/waveforms/cpu.png",
+        "size": "447.1 KB"
+      },
+      {
+        "name": "gpio.png",
+        "url": "/projects/rv32im-soc-processor/waveforms/gpio.png",
+        "size": "90.7 KB"
+      },
+      {
+        "name": "memory-decoder.png",
+        "url": "/projects/rv32im-soc-processor/waveforms/memory-decoder.png",
+        "size": "69.8 KB"
+      },
+      {
+        "name": "plic.png",
+        "url": "/projects/rv32im-soc-processor/waveforms/plic.png",
+        "size": "139.8 KB"
+      },
+      {
+        "name": "spi.png",
+        "url": "/projects/rv32im-soc-processor/waveforms/spi.png",
+        "size": "158.5 KB"
+      },
+      {
+        "name": "sram.png",
+        "url": "/projects/rv32im-soc-processor/waveforms/sram.png",
+        "size": "58.1 KB"
+      },
+      {
+        "name": "timer.png",
+        "url": "/projects/rv32im-soc-processor/waveforms/timer.png",
+        "size": "109.8 KB"
+      },
+      {
+        "name": "uart.png",
+        "url": "/projects/rv32im-soc-processor/waveforms/uart.png",
+        "size": "30.2 KB"
+      }
+    ],
+    "synthesis": [],
+    "timing": [],
+    "layout": [],
+    "floorplan": [],
+    "gds": [],
+    "gdsii": [],
+    "rtl": [],
+    "block-diagram": [],
+    "documentation": []
+  }
+}
