@@ -2,7 +2,8 @@ import fs from "fs";
 import path from "path";
 
 const ALLOWED_PROJECT_SLUGS = ["5-stage-pipeline-riscv", "rv32im-soc-processor", "uart", "cache-memory", "8-bit-cpu"];
-const SUB_DIRECTORIES = [
+
+const LOGICAL_KEYS = [
   "simulation",
   "synthesis",
   "timing",
@@ -12,10 +13,26 @@ const SUB_DIRECTORIES = [
   "gdsii",
   "rtl",
   "block-diagram",
-  "documentation"
+  "documentation",
+  "downloads"
 ];
 
-const SUPPORTED_EXTENSIONS = [".png", ".jpg", ".jpeg", ".svg", ".pdf"];
+// Map a logical frontend key to physical disk folder names to scan
+const KEY_TO_DISK_FOLDERS: Record<string, string[]> = {
+  simulation: ["waveforms", "simulation"],
+  synthesis: ["synthesis"],
+  timing: ["timing"],
+  layout: ["gdsii", "gds", "layout"],
+  floorplan: ["floorplan"],
+  gds: ["gdsii", "gds", "layout"],
+  gdsii: ["gdsii", "gds", "layout"],
+  rtl: ["rtl"],
+  "block-diagram": ["block-diagram", "diagram"],
+  documentation: ["documentation", "docs"],
+  downloads: ["downloads"]
+};
+
+const SUPPORTED_EXTENSIONS = [".png", ".jpg", ".jpeg", ".svg", ".webp", ".pdf", ".zip", ".v", ".sv", ".chisel"];
 
 export default async function handler(req: any, res: any) {
   if (req.method !== "GET") {
@@ -34,56 +51,85 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    // Define all directories to scan for this request
     const scanTargets: Array<{ dirPath: string; servingPrefix: string }> = [];
 
-    if (project === "rv32im-soc-processor") {
+    // Always scan public/projects/<project>
+    scanTargets.push({
+      dirPath: path.join(process.cwd(), "public", "projects", project),
+      servingPrefix: project
+    });
+
+    // Special mapping: 5-stage-pipeline-riscv -> rv32im-core
+    if (project === "5-stage-pipeline-riscv") {
       scanTargets.push({
-        dirPath: path.join(process.cwd(), "public", "projects", "rv32im-soc-processor"),
-        servingPrefix: "rv32im-soc-processor"
-      });
-    } else if (project === "uart" || project === "cache-memory" || project === "8-bit-cpu") {
-      scanTargets.push({
-        dirPath: path.join(process.cwd(), "public", "projects", project),
-        servingPrefix: project
-      });
-    } else {
-      scanTargets.push({
-        dirPath: path.join(process.cwd(), project),
-        servingPrefix: project
+        dirPath: path.join(process.cwd(), "public", "projects", "rv32im-core"),
+        servingPrefix: "5-stage-pipeline-riscv"
       });
     }
 
     const assetsMap: Record<string, Array<{ name: string; url: string; size: string }>> = {};
 
     // Initialize map
-    for (const subdir of SUB_DIRECTORIES) {
-      assetsMap[subdir] = [];
+    for (const key of LOGICAL_KEYS) {
+      assetsMap[key] = [];
     }
 
     // Scan each target directory
     for (const target of scanTargets) {
       if (!fs.existsSync(target.dirPath)) continue;
 
-      for (const subdir of SUB_DIRECTORIES) {
-        // Map asset category to actual disk directory name
-        let diskSubdir = subdir;
-        if (subdir === "simulation" && (target.servingPrefix === "rv32im-soc-processor" || target.servingPrefix === "uart" || target.servingPrefix === "cache-memory" || target.servingPrefix === "8-bit-cpu")) {
-          diskSubdir = "waveforms";
+      // 1. Scan logical subdirectories
+      for (const logicalKey of LOGICAL_KEYS) {
+        const diskFolders = KEY_TO_DISK_FOLDERS[logicalKey] || [logicalKey];
+
+        for (const diskSubdir of diskFolders) {
+          const subdirPath = path.join(target.dirPath, diskSubdir);
+
+          if (fs.existsSync(subdirPath)) {
+            const files = await fs.promises.readdir(subdirPath);
+
+            for (const file of files) {
+              const ext = path.extname(file).toLowerCase();
+              if (SUPPORTED_EXTENSIONS.includes(ext)) {
+                const filePath = path.join(subdirPath, file);
+                const stats = await fs.promises.stat(filePath);
+
+                // Skip directories if any
+                if (stats.isDirectory()) continue;
+                
+                // Format size
+                const sizeInBytes = stats.size;
+                let sizeStr = `${sizeInBytes} B`;
+                if (sizeInBytes >= 1024 * 1024) {
+                  sizeStr = `${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`;
+                } else if (sizeInBytes >= 1024) {
+                  sizeStr = `${(sizeInBytes / 1024).toFixed(1)} KB`;
+                }
+
+                // Avoid duplicates if same filename is already added under this logicalKey
+                if (assetsMap[logicalKey].some(item => item.name === file)) continue;
+
+                assetsMap[logicalKey].push({
+                  name: file,
+                  url: `/assets/projects/${target.servingPrefix}/${diskSubdir}/${file}`,
+                  size: sizeStr
+                });
+              }
+            }
+          }
         }
+      }
 
-        const subdirPath = path.join(target.dirPath, diskSubdir);
-
-        if (fs.existsSync(subdirPath)) {
-          const files = await fs.promises.readdir(subdirPath);
-
-          for (const file of files) {
-            const ext = path.extname(file).toLowerCase();
-            if (SUPPORTED_EXTENSIONS.includes(ext)) {
-              const filePath = path.join(subdirPath, file);
-              const stats = await fs.promises.stat(filePath);
-              
-              // Format size
+      // 2. Scan project root directory for block diagrams specifically
+      const rootFiles = await fs.promises.readdir(target.dirPath);
+      for (const file of rootFiles) {
+        const lowerFile = file.toLowerCase();
+        if (lowerFile.includes("block-diagram") || lowerFile.includes("block_diagram") || lowerFile.includes("diagram")) {
+          const ext = path.extname(file).toLowerCase();
+          if (SUPPORTED_EXTENSIONS.includes(ext)) {
+            const filePath = path.join(target.dirPath, file);
+            const stats = await fs.promises.stat(filePath);
+            if (stats.isFile()) {
               const sizeInBytes = stats.size;
               let sizeStr = `${sizeInBytes} B`;
               if (sizeInBytes >= 1024 * 1024) {
@@ -92,14 +138,13 @@ export default async function handler(req: any, res: any) {
                 sizeStr = `${(sizeInBytes / 1024).toFixed(1)} KB`;
               }
 
-              // Avoid duplicates if same filename is already added under this subdir
-              if (assetsMap[subdir].some(item => item.name === file)) continue;
-
-              assetsMap[subdir].push({
-                name: file,
-                url: `/assets/projects/${target.servingPrefix}/${diskSubdir}/${file}`,
-                size: sizeStr
-              });
+              if (!assetsMap["block-diagram"].some(item => item.name === file)) {
+                assetsMap["block-diagram"].push({
+                  name: file,
+                  url: `/assets/projects/${target.servingPrefix}/${file}`,
+                  size: sizeStr
+                });
+              }
             }
           }
         }
