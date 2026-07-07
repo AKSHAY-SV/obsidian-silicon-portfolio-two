@@ -927,7 +927,7 @@ async function handler7(req, res) {
 // api/projects/assets.ts
 var import_fs2 = __toESM(require("fs"), 1);
 var import_path2 = __toESM(require("path"), 1);
-var ALLOWED_PROJECT_SLUGS = ["5-stage-pipeline-riscv", "5-stage-soc", "rv32im-soc-processor", "uart", "cache-memory", "8-bit-cpu"];
+var ALLOWED_PROJECT_SLUGS = ["5-stage-pipeline-riscv", "rv32im-soc-processor", "uart", "cache-memory", "8-bit-cpu"];
 var SUB_DIRECTORIES = [
   "simulation",
   "synthesis",
@@ -959,11 +959,6 @@ async function handler8(req, res) {
       scanTargets.push({
         dirPath: import_path2.default.join(process.cwd(), "public", "projects", "rv32im-soc-processor"),
         servingPrefix: "rv32im-soc-processor"
-      });
-    } else if (project === "5-stage-soc") {
-      scanTargets.push({
-        dirPath: import_path2.default.join(process.cwd(), "5-stage-soc"),
-        servingPrefix: "5-stage-soc"
       });
     } else if (project === "uart" || project === "cache-memory" || project === "8-bit-cpu") {
       scanTargets.push({
@@ -1043,8 +1038,7 @@ app.post("/api/downloads/request-download", handler5);
 app.get("/api/downloads/serve", handler6);
 app.get("/api/downloads/analytics", handler7);
 app.use("/assets/projects/5-stage-pipeline-riscv", import_express.default.static(import_path3.default.join(process.cwd(), "5-stage-pipeline-riscv")));
-app.use("/assets/projects/5-stage-soc", import_express.default.static(import_path3.default.join(process.cwd(), "5-stage-soc")));
-app.use("/assets/projects/rv32im-soc-processor", import_express.default.static(import_path3.default.join(process.cwd(), "public", "projects", "rv32im-soc-processor")));
+app.use("/assets/projects", import_express.default.static(import_path3.default.join(process.cwd(), "public", "projects")));
 app.get("/api/projects/assets", handler8);
 async function bootstrap() {
   if (process.env.NODE_ENV !== "production") {
