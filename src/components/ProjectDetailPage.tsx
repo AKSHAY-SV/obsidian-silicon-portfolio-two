@@ -20,7 +20,7 @@ const FIVE_STAGE_SOC_SLUGS = new Set([
   'rv32im-soc-processor',
   'five-stage-pipeline',
   'five-stage-pipe',
-  '5-stage-soc',
+  'rv32im-soc-processor'
   '5-stage-pipeline-riscv',
 ]);
 
@@ -206,7 +206,7 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
   // Resolve matching restricted asset for this project
   const getProjectAsset = () => {
     const mapping: Record<string, string> = {
-      '5-stage-soc': 'rv32im-rtl-src',
+      'rv32im-soc-processor': 'rv32im-rtl-src',
       '5-stage-pipeline-riscv': 'rv32im-floorplan-def',
       'uart': 'uart-rtl-src',
       'cache-memory': 'cache-rtl-src',
@@ -1309,7 +1309,7 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
 
                 {/* Shell text content */}
                 <div className="p-5 text-slate-300 space-y-4 overflow-x-auto whitespace-pre leading-relaxed select-all">
-                  {slug === '5-stage-soc' && (
+                  {slug === 'rv32im-soc-processor' && (
                     <code>
 {`# 1. Environment and PDK path sourcing
 export TSMC_7NM_PDK="/opt/foundry/tsmc/7nm/N7"
