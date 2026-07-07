@@ -27,10 +27,25 @@ import {
   Gauge, Zap, AlertCircle, ChevronRight
 } from 'lucide-react';
 
+const getRelativePath = (pathname: string): string => {
+  const base = (import.meta as any).env.BASE_URL || "/";
+  if (pathname.startsWith(base)) {
+    return "/" + pathname.slice(base.length);
+  }
+  return pathname;
+};
+
+const getFullPath = (targetPath: string): string => {
+  const base = (import.meta as any).env.BASE_URL || "/";
+  const normalizedBase = base.endsWith("/") ? base : base + "/";
+  const cleanTarget = targetPath.startsWith("/") ? targetPath.slice(1) : targetPath;
+  return normalizedBase + cleanTarget;
+};
+
 export default function App() {
   // ---- URL-derived initial states ----
   const getInitialTabAndSlug = (): { tab: NavTab; slug: string | null } => {
-    const path = window.location.pathname;
+    const path = getRelativePath(window.location.pathname);
     if (path === '/admin' || path === '/admin/login') return { tab: 'admin', slug: null };
     if (path === '/admin/dashboard') return { tab: 'admin-dashboard', slug: null };
     if (path === '/request-access') return { tab: 'access-request', slug: null };
@@ -67,7 +82,9 @@ export default function App() {
   const [projects, setProjects] = useState<Project[]>(PROJECTS);
 
   useEffect(() => {
-    fetch('/projects/projects.json')
+    const base = (import.meta as any).env.BASE_URL || "/";
+    const normalizedBase = base.endsWith("/") ? base : base + "/";
+    fetch(`${normalizedBase}projects/projects.json`)
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch JSON');
         return res.json();
@@ -98,7 +115,7 @@ export default function App() {
 
   // Synchronize activeTab + projectSlug with URL path
   useEffect(() => {
-    const currentPath = window.location.pathname;
+    const currentPath = getRelativePath(window.location.pathname);
     let targetPath = '/';
     if (activeTab === 'admin') {
       targetPath = '/admin/login';
@@ -113,14 +130,14 @@ export default function App() {
     }
 
     if (currentPath !== targetPath) {
-      window.history.pushState({ tab: activeTab, slug: projectSlug }, '', targetPath);
+      window.history.pushState({ tab: activeTab, slug: projectSlug }, '', getFullPath(targetPath));
     }
   }, [activeTab, projectSlug]);
 
   // Handle browser back/forward buttons (popstate)
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
-      const path = window.location.pathname;
+      const path = getRelativePath(window.location.pathname);
       if (path === '/admin' || path === '/admin/login') {
         setActiveTab('admin');
         setProjectSlug(null);

@@ -4,7 +4,7 @@ import path from 'path';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/',
+  base: '/obsidian-silicon-portfolio-two/',
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

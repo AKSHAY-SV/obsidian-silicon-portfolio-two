@@ -24,6 +24,22 @@ const FIVE_STAGE_SOC_SLUGS = new Set([
   '5-stage-pipeline-riscv',
 ]);
 
+const resolveAssetUrl = (url: string | undefined | null): string => {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  
+  let cleanUrl = url;
+  if (cleanUrl.startsWith("/assets/projects/")) {
+    cleanUrl = cleanUrl.replace("/assets/projects/", "/projects/");
+  }
+  
+  const base = (import.meta as any).env.BASE_URL || "/";
+  const normalizedBase = base.endsWith("/") ? base : base + "/";
+  const normalizedUrl = cleanUrl.startsWith("/") ? cleanUrl.slice(1) : cleanUrl;
+  
+  return normalizedBase + normalizedUrl;
+};
+
 export default function ProjectDetailPage({ project, onBack }: ProjectDetailPageProps) {
   const slug = project.slug || project.id;
 
@@ -59,9 +75,34 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
     const fetchAssets = async () => {
       setIsLoadingAssets(true);
       try {
-        const res = await fetch(`/api/projects/assets?project=${encodeURIComponent(slug)}`);
-        const data = await res.json();
-        if (data.success && data.assets) {
+        let data;
+        try {
+          const res = await fetch(`/api/projects/assets?project=${encodeURIComponent(slug)}`);
+          if (res.ok) {
+            data = await res.json();
+          } else {
+            throw new Error(`Dynamic asset API returned status ${res.status}`);
+          }
+        } catch (apiErr) {
+          console.warn("Dynamic assets API unavailable, falling back to static manifest...", apiErr);
+          const manifestRes = await fetch(resolveAssetUrl("/projects/assets-manifest.json"));
+          if (manifestRes.ok) {
+            const manifest = await manifestRes.json();
+            if (manifest && manifest[slug]) {
+              data = {
+                success: true,
+                project: slug,
+                assets: manifest[slug]
+              };
+            } else {
+              throw new Error(`Project slug '${slug}' not found in static assets manifest.`);
+            }
+          } else {
+            throw new Error(`Failed to load static assets manifest: ${manifestRes.status}`);
+          }
+        }
+
+        if (data && data.success && data.assets) {
           setDiscoveredAssets(data.assets);
           
           // Auto-select first discovered file for each section if any
@@ -563,7 +604,7 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
                         className="w-full h-full flex items-center justify-center cursor-zoom-in relative max-h-[380px] sm:max-h-[400px]"
                       >
                         <img
-                          src={simulationWaveforms[activeWaveformIndex]?.url}
+                          src={resolveAssetUrl(simulationWaveforms[activeWaveformIndex]?.url)}
                           alt={getCaptionFromFilename(simulationWaveforms[activeWaveformIndex]?.name)}
                           referrerPolicy="no-referrer"
                           className="max-w-full max-h-full object-contain hover:scale-[1.01] transition-transform duration-300"
@@ -625,7 +666,7 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
                             {/* Tiny Image Thumbnail */}
                             <div className="w-full h-16 rounded bg-black flex items-center justify-center overflow-hidden border border-[rgba(255,255,255,0.02)]">
                               <img
-                                src={file.url}
+                                src={resolveAssetUrl(file.url)}
                                 alt={getCaptionFromFilename(file.name)}
                                 referrerPolicy="no-referrer"
                                 className="max-w-full max-h-full object-contain opacity-50 group-hover:opacity-100 transition-opacity"
@@ -699,7 +740,7 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
                         className="w-full h-full flex items-center justify-center cursor-zoom-in relative max-h-[380px] sm:max-h-[400px]"
                       >
                         <img
-                          src={timingAssets[activeTimingIndex]?.url}
+                          src={resolveAssetUrl(timingAssets[activeTimingIndex]?.url)}
                           alt={formatCaption(timingAssets[activeTimingIndex]?.name, "Timing Report")}
                           referrerPolicy="no-referrer"
                           className="max-w-full max-h-full object-contain hover:scale-[1.01] transition-transform duration-300"
@@ -764,7 +805,7 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
                               {/* Tiny Image Thumbnail */}
                               <div className="w-full h-16 rounded bg-black flex items-center justify-center overflow-hidden border border-[rgba(255,255,255,0.02)]">
                                 <img
-                                  src={file.url}
+                                  src={resolveAssetUrl(file.url)}
                                   alt={formatCaption(file.name, "Timing Report")}
                                   referrerPolicy="no-referrer"
                                   className="max-w-full max-h-full object-contain opacity-50 group-hover:opacity-100 transition-opacity"
@@ -839,7 +880,7 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
                         className="w-full h-full flex items-center justify-center cursor-zoom-in relative max-h-[380px] sm:max-h-[400px]"
                       >
                         <img
-                          src={floorplanAssets[activeFloorplanIndex]?.url}
+                          src={resolveAssetUrl(floorplanAssets[activeFloorplanIndex]?.url)}
                           alt={formatCaption(floorplanAssets[activeFloorplanIndex]?.name, "Physical Floorplan")}
                           referrerPolicy="no-referrer"
                           className="max-w-full max-h-full object-contain hover:scale-[1.01] transition-transform duration-300"
@@ -904,7 +945,7 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
                               {/* Tiny Image Thumbnail */}
                               <div className="w-full h-16 rounded bg-black flex items-center justify-center overflow-hidden border border-[rgba(255,255,255,0.02)]">
                                 <img
-                                  src={file.url}
+                                  src={resolveAssetUrl(file.url)}
                                   alt={formatCaption(file.name, "Physical Floorplan")}
                                   referrerPolicy="no-referrer"
                                   className="max-w-full max-h-full object-contain opacity-50 group-hover:opacity-100 transition-opacity"
@@ -979,7 +1020,7 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
                         className="w-full h-full flex items-center justify-center cursor-zoom-in relative max-h-[380px] sm:max-h-[400px]"
                       >
                         <img
-                          src={gdsiiAssets[activeGdsiiIndex]?.url}
+                          src={resolveAssetUrl(gdsiiAssets[activeGdsiiIndex]?.url)}
                           alt={formatCaption(gdsiiAssets[activeGdsiiIndex]?.name, "GDSII Mask Layout")}
                           referrerPolicy="no-referrer"
                           className="max-w-full max-h-full object-contain hover:scale-[1.01] transition-transform duration-300"
@@ -1044,7 +1085,7 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
                               {/* Tiny Image Thumbnail */}
                               <div className="w-full h-16 rounded bg-black flex items-center justify-center overflow-hidden border border-[rgba(255,255,255,0.02)]">
                                 <img
-                                  src={file.url}
+                                  src={resolveAssetUrl(file.url)}
                                   alt={formatCaption(file.name, "GDSII Mask Layout")}
                                   referrerPolicy="no-referrer"
                                   className="max-w-full max-h-full object-contain opacity-50 group-hover:opacity-100 transition-opacity"
@@ -1531,7 +1572,7 @@ function FullscreenGalleryViewer({
           style={{ cursor: scale > 1 ? (isDragging.current ? 'grabbing' : 'grab') : 'default' }}
         >
           <img
-            src={current.url}
+            src={resolveAssetUrl(current.url)}
             alt={getCaption(current.name)}
             draggable={false}
             style={{
@@ -2245,7 +2286,7 @@ function EngineeringViewer({ src, alt, fallbackType, projectId }: EngineeringVie
             renderVectorFallback()
           ) : (
             <img
-              src={src}
+              src={resolveAssetUrl(src)}
               alt={alt}
               onError={() => setFailed(true)}
               className="max-w-full max-h-[500px] object-contain select-none"

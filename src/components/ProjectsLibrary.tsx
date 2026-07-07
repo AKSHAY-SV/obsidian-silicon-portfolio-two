@@ -34,7 +34,9 @@ export default function ProjectsLibrary({ projects, setActiveTab, onOpenProject 
   // page still loads when the parent hasn't supplied a projects array.
   useEffect(() => {
     if (projects && projects.length > 0) return;
-    fetch('/projects/projects.json')
+    const base = (import.meta as any).env.BASE_URL || "/";
+    const normalizedBase = base.endsWith("/") ? base : base + "/";
+    fetch(`${normalizedBase}projects/projects.json`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) setProjectsList(data);
@@ -51,7 +53,9 @@ export default function ProjectsLibrary({ projects, setActiveTab, onOpenProject 
       return;
     }
     // URL fallback so deep-link navigation still works.
-    window.history.pushState({ tab: 'projects', slug }, '', `/projects/${slug}`);
+    const base = (import.meta as any).env.BASE_URL || "/";
+    const normalizedBase = base.endsWith("/") ? base : base + "/";
+    window.history.pushState({ tab: 'projects', slug }, '', `${normalizedBase}projects/${slug}`);
     window.dispatchEvent(new PopStateEvent('popstate'));
   };
 

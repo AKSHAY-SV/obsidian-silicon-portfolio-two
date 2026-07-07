@@ -36,7 +36,11 @@ export default function VerificationWaveforms({ slug }: VerificationWaveformsPro
     { id: 'plic', title: 'PLIC Verification' },
     { id: 'memory-decoder', title: 'Memory Decoder Verification' },
     { id: 'complete-soc', title: 'Complete SoC Verification' },
-  ].map((m) => ({ ...m, image: `/projects/${slug}/waveforms/${m.id}.png` }));
+  ].map((m) => {
+    const base = (import.meta as any).env.BASE_URL || "/";
+    const normalizedBase = base.endsWith("/") ? base : base + "/";
+    return { ...m, image: `${normalizedBase}projects/${slug}/waveforms/${m.id}.png` };
+  });
 
   // All accordions closed by default.
   const [openId, setOpenId] = useState<string | null>(null);
