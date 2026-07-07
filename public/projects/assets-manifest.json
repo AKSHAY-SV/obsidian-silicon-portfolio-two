@@ -1,5 +1,29 @@
 {
+  "8-bit-cpu": {
+    "simulation": [],
+    "synthesis": [],
+    "timing": [],
+    "layout": [],
+    "floorplan": [],
+    "gds": [],
+    "gdsii": [],
+    "rtl": [],
+    "block-diagram": [],
+    "documentation": []
+  },
   "axi4-interconnect": {
+    "simulation": [],
+    "synthesis": [],
+    "timing": [],
+    "layout": [],
+    "floorplan": [],
+    "gds": [],
+    "gdsii": [],
+    "rtl": [],
+    "block-diagram": [],
+    "documentation": []
+  },
+  "cache-memory": {
     "simulation": [],
     "synthesis": [],
     "timing": [],
@@ -115,7 +139,13 @@
     "synthesis": [],
     "timing": [],
     "layout": [],
-    "floorplan": [],
+    "floorplan": [
+      {
+        "name": "floorplan.svg",
+        "url": "/projects/rv32im-soc-processor/floorplan/floorplan.svg",
+        "size": "15.3 KB"
+      }
+    ],
     "gds": [],
     "gdsii": [],
     "rtl": [],
@@ -123,30 +153,6 @@
     "documentation": []
   },
   "uart": {
-    "simulation": [],
-    "synthesis": [],
-    "timing": [],
-    "layout": [],
-    "floorplan": [],
-    "gds": [],
-    "gdsii": [],
-    "rtl": [],
-    "block-diagram": [],
-    "documentation": []
-  },
-  "cache-memory": {
-    "simulation": [],
-    "synthesis": [],
-    "timing": [],
-    "layout": [],
-    "floorplan": [],
-    "gds": [],
-    "gdsii": [],
-    "rtl": [],
-    "block-diagram": [],
-    "documentation": []
-  },
-  "8-bit-cpu": {
     "simulation": [],
     "synthesis": [],
     "timing": [],
