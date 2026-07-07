@@ -137,7 +137,13 @@
       }
     ],
     "synthesis": [],
-    "timing": [],
+    "timing": [
+      {
+        "name": "Static Timing  Analysis.png",
+        "url": "/projects/rv32im-soc-processor/timing/Static Timing  Analysis.png",
+        "size": "1.4 MB"
+      }
+    ],
     "layout": [],
     "floorplan": [
       {
