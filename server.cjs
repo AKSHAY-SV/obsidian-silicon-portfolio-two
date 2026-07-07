@@ -927,7 +927,7 @@ async function handler7(req, res) {
 // api/projects/assets.ts
 var import_fs2 = __toESM(require("fs"), 1);
 var import_path2 = __toESM(require("path"), 1);
-var ALLOWED_PROJECT_SLUGS = ["5-stage-pipeline-riscv", "5-stage-soc"];
+var ALLOWED_PROJECT_SLUGS = ["5-stage-pipeline-riscv", "5-stage-soc", "rv32im-soc-processor"];
 var SUB_DIRECTORIES = [
   "simulation",
   "synthesis",
@@ -935,6 +935,7 @@ var SUB_DIRECTORIES = [
   "layout",
   "floorplan",
   "gds",
+  "gdsii",
   "rtl",
   "block-diagram",
   "documentation"
@@ -953,33 +954,51 @@ async function handler8(req, res) {
     return res.status(400).json({ success: false, error: `Invalid project slug. Allowed: ${ALLOWED_PROJECT_SLUGS.join(", ")}` });
   }
   try {
-    const projectPath = import_path2.default.join(process.cwd(), project);
-    if (!import_fs2.default.existsSync(projectPath)) {
-      return res.status(404).json({ success: false, error: `Project directory ${project} not found on server.` });
+    const scanTargets = [];
+    if (project === "5-stage-soc" || project === "rv32im-soc-processor") {
+      scanTargets.push({
+        dirPath: import_path2.default.join(process.cwd(), "5-stage-soc"),
+        servingPrefix: "5-stage-soc"
+      });
+      scanTargets.push({
+        dirPath: import_path2.default.join(process.cwd(), "public", "projects", "rv32im-soc-processor"),
+        servingPrefix: "rv32im-soc-processor"
+      });
+    } else {
+      scanTargets.push({
+        dirPath: import_path2.default.join(process.cwd(), project),
+        servingPrefix: project
+      });
     }
     const assetsMap = {};
     for (const subdir of SUB_DIRECTORIES) {
       assetsMap[subdir] = [];
-      const subdirPath = import_path2.default.join(projectPath, subdir);
-      if (import_fs2.default.existsSync(subdirPath)) {
-        const files = await import_fs2.default.promises.readdir(subdirPath);
-        for (const file of files) {
-          const ext = import_path2.default.extname(file).toLowerCase();
-          if (SUPPORTED_EXTENSIONS.includes(ext)) {
-            const filePath = import_path2.default.join(subdirPath, file);
-            const stats = await import_fs2.default.promises.stat(filePath);
-            const sizeInBytes = stats.size;
-            let sizeStr = `${sizeInBytes} B`;
-            if (sizeInBytes >= 1024 * 1024) {
-              sizeStr = `${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`;
-            } else if (sizeInBytes >= 1024) {
-              sizeStr = `${(sizeInBytes / 1024).toFixed(1)} KB`;
+    }
+    for (const target of scanTargets) {
+      if (!import_fs2.default.existsSync(target.dirPath)) continue;
+      for (const subdir of SUB_DIRECTORIES) {
+        const subdirPath = import_path2.default.join(target.dirPath, subdir);
+        if (import_fs2.default.existsSync(subdirPath)) {
+          const files = await import_fs2.default.promises.readdir(subdirPath);
+          for (const file of files) {
+            const ext = import_path2.default.extname(file).toLowerCase();
+            if (SUPPORTED_EXTENSIONS.includes(ext)) {
+              const filePath = import_path2.default.join(subdirPath, file);
+              const stats = await import_fs2.default.promises.stat(filePath);
+              const sizeInBytes = stats.size;
+              let sizeStr = `${sizeInBytes} B`;
+              if (sizeInBytes >= 1024 * 1024) {
+                sizeStr = `${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`;
+              } else if (sizeInBytes >= 1024) {
+                sizeStr = `${(sizeInBytes / 1024).toFixed(1)} KB`;
+              }
+              if (assetsMap[subdir].some((item) => item.name === file)) continue;
+              assetsMap[subdir].push({
+                name: file,
+                url: `/assets/projects/${target.servingPrefix}/${subdir}/${file}`,
+                size: sizeStr
+              });
             }
-            assetsMap[subdir].push({
-              name: file,
-              url: `/assets/projects/${project}/${subdir}/${file}`,
-              size: sizeStr
-            });
           }
         }
       }
@@ -1015,6 +1034,7 @@ app.get("/api/downloads/serve", handler6);
 app.get("/api/downloads/analytics", handler7);
 app.use("/assets/projects/5-stage-pipeline-riscv", import_express.default.static(import_path3.default.join(process.cwd(), "5-stage-pipeline-riscv")));
 app.use("/assets/projects/5-stage-soc", import_express.default.static(import_path3.default.join(process.cwd(), "5-stage-soc")));
+app.use("/assets/projects/rv32im-soc-processor", import_express.default.static(import_path3.default.join(process.cwd(), "public", "projects", "rv32im-soc-processor")));
 app.get("/api/projects/assets", handler8);
 async function bootstrap() {
   if (process.env.NODE_ENV !== "production") {
