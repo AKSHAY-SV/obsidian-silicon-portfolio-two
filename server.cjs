@@ -927,7 +927,7 @@ async function handler7(req, res) {
 // api/projects/assets.ts
 var import_fs2 = __toESM(require("fs"), 1);
 var import_path2 = __toESM(require("path"), 1);
-var ALLOWED_PROJECT_SLUGS = ["5-stage-pipeline-riscv", "5-stage-soc", "rv32im-soc-processor"];
+var ALLOWED_PROJECT_SLUGS = ["5-stage-pipeline-riscv", "5-stage-soc", "rv32im-soc-processor", "uart", "cache-memory", "8-bit-cpu"];
 var SUB_DIRECTORIES = [
   "simulation",
   "synthesis",
@@ -965,6 +965,11 @@ async function handler8(req, res) {
         dirPath: import_path2.default.join(process.cwd(), "5-stage-soc"),
         servingPrefix: "5-stage-soc"
       });
+    } else if (project === "uart" || project === "cache-memory" || project === "8-bit-cpu") {
+      scanTargets.push({
+        dirPath: import_path2.default.join(process.cwd(), "public", "projects", project),
+        servingPrefix: project
+      });
     } else {
       scanTargets.push({
         dirPath: import_path2.default.join(process.cwd(), project),
@@ -979,7 +984,7 @@ async function handler8(req, res) {
       if (!import_fs2.default.existsSync(target.dirPath)) continue;
       for (const subdir of SUB_DIRECTORIES) {
         let diskSubdir = subdir;
-        if (subdir === "simulation" && target.servingPrefix === "rv32im-soc-processor") {
+        if (subdir === "simulation" && (target.servingPrefix === "rv32im-soc-processor" || target.servingPrefix === "uart" || target.servingPrefix === "cache-memory" || target.servingPrefix === "8-bit-cpu")) {
           diskSubdir = "waveforms";
         }
         const subdirPath = import_path2.default.join(target.dirPath, diskSubdir);

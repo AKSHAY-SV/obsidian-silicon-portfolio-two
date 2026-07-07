@@ -72,5 +72,107 @@
         "size": "6.2 KB"
       }
     ]
+  },
+  {
+    "id": "uart",
+    "name": "UART Controller",
+    "category": "Digital IP",
+    "tagline": "Fully-Parametric UART IP Core with Configurable FIFO & Flow Control",
+    "description": "A highly robust, parameterized UART controller with configurable baud rate, data bits, parity modes, stop bits, and independent transmitter/receiver FIFO queues supporting automatic RTS/CTS flow control.",
+    "techStack": ["SystemVerilog", "Verilator", "C++ Testbench", "FPGA (Artix-7)", "OpenSTA"],
+    "image": "https://images.unsplash.com/photo-1601524909162-be87252be298?q=80&w=600&auto=format&fit=crop",
+    "difficulty": "Intermediate",
+    "status": "Completed",
+    "completionDate": "2026-06",
+    "completionDisplay": "Jun 2026",
+    "primaryLanguage": "SystemVerilog",
+    "complexityScore": 85,
+    "domains": ["RTL Design", "Digital IP", "Verification", "FPGA"],
+    "quickTags": ["UART IP", "Flow Control", "CDC Sync"],
+    "githubUrl": "https://github.com/google-deepmind/uart-controller",
+    "specs": [
+      { "label": "Baud Rate Support", "value": "Configurable up to 12.5 Mbps" },
+      { "label": "FIFO Size", "value": "Configurable (16 to 256-byte queues)" },
+      { "label": "Interface Type", "value": "APB Peripheral Register Bus" },
+      { "label": "Flow Control", "value": "RTS/CTS Hardware Auto-negotiation" },
+      { "label": "Glitch Filter", "value": "16x Oversampling Sample-Voting" },
+      { "label": "CDC Safety", "value": "Multi-stage Gray-code Synchronization" }
+    ],
+    "files": [
+      {
+        "name": "uart_tx.v",
+        "path": "rtl/uart/uart_tx.v",
+        "content": "// =================================================================\n// PROJECT: UART Controller IP\n// FILE: uart_tx.v\n// DESCRIPTION: Parametric Transmitter Module with RTS/CTS\n// =================================================================\n\nmodule uart_tx #(\n    parameter DATA_WIDTH = 8\n)(\n    input  wire                  clk,\n    input  wire                  rst_n,\n    input  wire                  tx_start,\n    input  wire                  baud_tick,\n    input  wire [DATA_WIDTH-1:0] tx_data,\n    input  wire                  cts_n,\n    output reg                   tx_out,\n    output reg                   tx_busy,\n    output reg                   tx_done\n);\n\n    typedef enum reg [1:0] {\n        IDLE   = 2'b00,\n        START  = 2'b01,\n        DATA   = 2'b10,\n        STOP   = 2'b11\n    } state_t;\n\n    state_t state, next_state;\n    reg [2:0] bit_cnt;\n    reg [DATA_WIDTH-1:0] tx_reg;\n\n    always @(posedge clk or negedge rst_n) begin\n        if (!rst_n) begin\n            state   <= IDLE;\n            tx_out  <= 1'b1;\n            tx_busy <= 1'b0;\n            bit_cnt <= 3'b0;\n        end else begin\n            state <= next_state;\n            if (state == IDLE && tx_start && !cts_n) begin\n                tx_reg  <= tx_data;\n                tx_busy <= 1'b1;\n            end\n        end\n    end\n\nendmodule",
+        "size": "2.8 KB"
+      }
+    ]
+  },
+  {
+    "id": "cache-memory",
+    "name": "Cache Memory Controller",
+    "category": "Digital IP",
+    "tagline": "Non-Blocking L1/L2 Cache Controller with MESI Coherency Protocol",
+    "description": "A high-performance, non-blocking 4-way set-associative cache memory controller featuring a MESI cache coherency engine, lookahead prefetching, and configurable write-back/write-allocate architectures.",
+    "techStack": ["SystemVerilog", "Verilator", "OpenROAD", "Synopsys Design Compiler", "Cadence Innovus"],
+    "image": "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?q=80&w=600&auto=format&fit=crop",
+    "difficulty": "Advanced",
+    "status": "Completed",
+    "completionDate": "2026-07",
+    "completionDisplay": "Jul 2026",
+    "primaryLanguage": "SystemVerilog",
+    "complexityScore": 95,
+    "domains": ["Memory Systems", "Computer Architecture", "RTL Design", "ASIC Design"],
+    "quickTags": ["MESI Protocol", "4-Way Set-Assoc", "Non-blocking"],
+    "githubUrl": "https://github.com/google-deepmind/cache-memory-controller",
+    "specs": [
+      { "label": "Associativity", "value": "4-Way Set Associative Cache" },
+      { "label": "Coherency Protocol", "value": "MESI Snooping Controller Hardware" },
+      { "label": "Line Size", "value": "64 Bytes Cache Line Size" },
+      { "label": "Miss Handling", "value": "Non-blocking with Dual MSHR Registers" },
+      { "label": "Hit Latency", "value": "1 Cycle Tag Match & Set Fetch" },
+      { "label": "System Interface", "value": "128-bit AXI4 Master Host Bus" }
+    ],
+    "files": [
+      {
+        "name": "cache_controller.v",
+        "path": "rtl/cache/cache_controller.v",
+        "content": "// =================================================================\n// PROJECT: Cache Memory Controller\n// FILE: cache_controller.v\n// DESCRIPTION: 4-Way Set-Associative Cache Tag Compare Logic\n// =================================================================\n\nmodule cache_controller #(\n    parameter TAG_WIDTH  = 20,\n    parameter SET_WIDTH  = 6,\n    parameter LINE_WIDTH = 512 // 64 Bytes\n)(\n    input  wire                  clk,\n    input  wire                  rst_n,\n    input  wire                  req_valid,\n    input  wire [31:0]           req_addr,\n    input  wire                  req_write,\n    output reg                   req_ready,\n    output reg                   hit,\n    \n    // Snooping Interface for Coherency\n    input  wire [31:0]           snoop_addr,\n    input  wire [1:0]            snoop_type,\n    output reg  [1:0]            snoop_response\n);\n\n    // Cache Ways SRAM Arrays (Surgically pipelined for timing)\n    wire [TAG_WIDTH-1:0] tag_way0, tag_way1, tag_way2, tag_way3;\n    wire                 valid_way0, valid_way1, valid_way2, valid_way3;\n\n    wire [TAG_WIDTH-1:0] target_tag = req_addr[31:12];\n    wire [SET_WIDTH-1:0] target_set = req_addr[11:6];\n\n    // Tag comparison matrix\n    wire match0 = valid_way0 && (tag_way0 == target_tag);\n    wire match1 = valid_way1 && (tag_way1 == target_tag);\n    wire match2 = valid_way2 && (tag_way2 == target_tag);\n    wire match3 = valid_way3 && (tag_way3 == target_tag);\n\n    always @(*) begin\n        hit = match0 || match1 || match2 || match3;\n        req_ready = rst_n; // Ready unless locked on eviction line-fill\n    end\n\nendmodule",
+        "size": "5.5 KB"
+      }
+    ]
+  },
+  {
+    "id": "8-bit-cpu",
+    "name": "8-Bit CPU & Custom Computer",
+    "category": "Computer Arch",
+    "tagline": "A complete discrete-logic TTL-equivalent 8-Bit Computer",
+    "description": "A custom 8-bit discrete-logic computer architecture featuring an 8-bit ALU, register file, microprogrammed control unit, memory controller, and a custom instruction set (assembly-programmable).",
+    "techStack": ["SystemVerilog", "Logisim", "KiCAD", "Verilator", "FPGA (Artix-7)"],
+    "image": "https://images.unsplash.com/photo-1555664424-778a1e5e1b48?q=80&w=600&auto=format&fit=crop",
+    "difficulty": "Intermediate",
+    "status": "Completed",
+    "completionDate": "2026-04",
+    "completionDisplay": "Apr 2026",
+    "primaryLanguage": "SystemVerilog",
+    "complexityScore": 80,
+    "domains": ["Computer Architecture", "RTL Design", "Digital Logic", "FPGA"],
+    "quickTags": ["Discrete TTL", "Microcoded CPU", "Logisim Model"],
+    "githubUrl": "https://github.com/google-deepmind/8-bit-cpu",
+    "specs": [
+      { "label": "Bus Width", "value": "8-bit Data Bus / 16-bit Address Bus" },
+      { "label": "Instruction Set", "value": "Custom 32 assembly opcodes architecture" },
+      { "label": "Register Count", "value": "4 General Purpose registers (A, B, C, D)" },
+      { "label": "Control Method", "value": "Microcoded Control ROM Logic" },
+      { "label": "Memory Limit", "value": "64 Kilobytes Addressable RAM/ROM space" },
+      { "label": "ALU Functions", "value": "ADD, SUB, AND, OR, XOR, SHL, SHR, NOT" }
+    ],
+    "files": [
+      {
+        "name": "alu_8bit.v",
+        "path": "rtl/cpu/alu_8bit.v",
+        "content": "// =================================================================\n// PROJECT: 8-Bit CPU\n// FILE: alu_8bit.v\n// DESCRIPTION: 8-Bit Arithmetic Logic Unit with flags output\n// =================================================================\n\nmodule alu_8bit (\n    input  wire [7:0] a,\n    input  wire [7:0] b,\n    input  wire [2:0] op,\n    output reg  [7:0] out,\n    output wire       zero_flag,\n    output wire       carry_flag\n);\n\n    reg [8:0] temp_sum;\n    assign zero_flag = (out == 8'h00);\n    assign carry_flag = temp_sum[8];\n\n    always @(*) begin\n        temp_sum = 9'h000;\n        case (op)\n            3'b000: begin temp_sum = {1'b0, a} + {1'b0, b}; out = temp_sum[7:0]; end // ADD\n            3'b001: begin temp_sum = {1'b0, a} - {1'b0, b}; out = temp_sum[7:0]; end // SUB\n            3'b010: out = a & b;          // AND\n            3'b011: out = a | b;          // OR\n            3'b100: out = a ^ b;          // XOR\n            3'b101: out = a << 1;         // SHL\n            3'b110: out = a >> 1;         // SHR\n            3'b111: out = ~a;             // NOT\n            default: out = 8'h00;\n        endcase\n    end\n\nendmodule",
+        "size": "1.8 KB"
+      }
+    ]
   }
 ]

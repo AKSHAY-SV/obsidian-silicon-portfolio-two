@@ -1,5 +1,29 @@
 {
+  "8-bit-cpu": {
+    "simulation": [],
+    "synthesis": [],
+    "timing": [],
+    "layout": [],
+    "floorplan": [],
+    "gds": [],
+    "gdsii": [],
+    "rtl": [],
+    "block-diagram": [],
+    "documentation": []
+  },
   "axi4-interconnect": {
+    "simulation": [],
+    "synthesis": [],
+    "timing": [],
+    "layout": [],
+    "floorplan": [],
+    "gds": [],
+    "gdsii": [],
+    "rtl": [],
+    "block-diagram": [],
+    "documentation": []
+  },
+  "cache-memory": {
     "simulation": [],
     "synthesis": [],
     "timing": [],
@@ -112,6 +136,18 @@
         "size": "30.2 KB"
       }
     ],
+    "synthesis": [],
+    "timing": [],
+    "layout": [],
+    "floorplan": [],
+    "gds": [],
+    "gdsii": [],
+    "rtl": [],
+    "block-diagram": [],
+    "documentation": []
+  },
+  "uart": {
+    "simulation": [],
     "synthesis": [],
     "timing": [],
     "layout": [],
