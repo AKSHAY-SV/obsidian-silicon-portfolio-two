@@ -45,6 +45,7 @@ app.get("/api/downloads/analytics", analyticsHandler);
 // Serve project folders statically under /assets/projects/
 app.use("/assets/projects/5-stage-pipeline-riscv", express.static(path.join(process.cwd(), "5-stage-pipeline-riscv")));
 app.use("/assets/projects/5-stage-soc", express.static(path.join(process.cwd(), "5-stage-soc")));
+app.use("/assets/projects/rv32im-soc-processor", express.static(path.join(process.cwd(), "public", "projects", "rv32im-soc-processor")));
 
 // API: Project Assets Discovery Endpoint
 app.get("/api/projects/assets", projectAssetsHandler);

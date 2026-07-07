@@ -43,6 +43,18 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
   const [activeWaveformIndex, setActiveWaveformIndex] = useState(0);
   const [isFullscreenWaveform, setIsFullscreenWaveform] = useState(false);
 
+  // Floorplan gallery state
+  const [activeFloorplanIndex, setActiveFloorplanIndex] = useState(0);
+  const [isFullscreenFloorplan, setIsFullscreenFloorplan] = useState(false);
+
+  // Timing gallery state
+  const [activeTimingIndex, setActiveTimingIndex] = useState(0);
+  const [isFullscreenTiming, setIsFullscreenTiming] = useState(false);
+
+  // GDSII gallery state
+  const [activeGdsiiIndex, setActiveGdsiiIndex] = useState(0);
+  const [isFullscreenGdsii, setIsFullscreenGdsii] = useState(false);
+
   useEffect(() => {
     const fetchAssets = async () => {
       setIsLoadingAssets(true);
@@ -208,6 +220,37 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
   };
 
   const simulationWaveforms = discoveredAssets["simulation"] || [];
+
+  const floorplanAssets = discoveredAssets["floorplan"] || [];
+  const timingAssets = discoveredAssets["timing"] || [];
+  const gdsiiAssets = discoveredAssets["gdsii"] || discoveredAssets["gds"] || [];
+
+  const formatCaption = (filename: string, defaultSuffix: string): string => {
+    if (!filename) return "";
+    const nameWithoutExt = filename.replace(/\.[^/.]+$/, "");
+    const abbreviations: Record<string, string> = {
+      "apb": "APB",
+      "cpu": "CPU",
+      "uart": "UART",
+      "gpio": "GPIO",
+      "plic": "PLIC",
+      "spi": "SPI",
+      "sram": "SRAM",
+      "soc": "SoC",
+      "gds": "GDS",
+      "gdsii": "GDSII"
+    };
+
+    const words = nameWithoutExt.split(/[-_]/).map(word => {
+      const lower = word.toLowerCase();
+      if (abbreviations[lower]) {
+        return abbreviations[lower];
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    });
+
+    return `${words.join(" ")} ${defaultSuffix}`;
+  };
 
   const getCaptionFromFilename = (filename: string): string => {
     if (!filename) return "";
@@ -609,132 +652,420 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
           {/* Section 06: Timing Reports & Analysis */}
           <Section index="06" title="Timing Reports &amp; Analysis" icon={<Clock className="h-4 w-4" />}>
             <div className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono text-xs text-slate-400">
-                <div className="p-4 bg-[#040406] rounded-xl border border-[rgba(255,255,255,0.03)] flex flex-col justify-between">
-                  <div>
-                    <span className="text-slate-500 block text-[9px] uppercase tracking-widest font-bold">Worst Negative Slack (WNS)</span>
-                    <span className="text-emerald-400 font-black text-xl block mt-1">+1.42 ns</span>
-                  </div>
-                  <span className="text-slate-600 text-[10px] mt-2 block border-t border-[rgba(255,255,255,0.03)] pt-2">// Timing requirement met safely.</span>
-                </div>
-                <div className="p-4 bg-[#040406] rounded-xl border border-[rgba(255,255,255,0.03)] flex flex-col justify-between">
-                  <div>
-                    <span className="text-slate-500 block text-[9px] uppercase tracking-widest font-bold">Total Negative Slack (TNS)</span>
-                    <span className="text-emerald-400 font-black text-xl block mt-1">0.00 ns (MET)</span>
-                  </div>
-                  <span className="text-slate-600 text-[10px] mt-2 block border-t border-[rgba(255,255,255,0.03)] pt-2">// No timing violations across path corners.</span>
-                </div>
-              </div>
+              <p className="font-sans text-sm text-slate-300 leading-relaxed">
+                Static timing analysis reports indicating setup and hold Slack, critical paths, and frequency parameters.
+              </p>
 
-              {/* Dynamic asset picker */}
-              {discoveredAssets["timing"] && discoveredAssets["timing"].length > 0 && (
-                <div className="p-3 bg-[#a78bfa]/5 border border-[#a78bfa]/10 rounded-lg flex flex-col gap-1.5 font-mono text-[10px]">
-                  <span className="text-[#a78bfa] uppercase tracking-wider font-bold">// DISCOVERED TIMING REPORTS ({discoveredAssets["timing"].length}):</span>
-                  <div className="flex flex-wrap gap-2">
-                    {discoveredAssets["timing"].map((file) => (
-                      <button
-                        key={file.name}
-                        onClick={() => setSelectedTiming(file.url)}
-                        className={`px-2 py-0.5 rounded border text-left transition-all flex items-center gap-1.5 cursor-pointer ${selectedTiming === file.url ? 'bg-[#a78bfa]/20 border-[#a78bfa]/40 text-white font-bold' : 'bg-[#040406]/60 border-slate-800 text-slate-400 hover:text-white'}`}
+              {timingAssets.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 px-6 rounded-xl border border-dashed border-slate-800 bg-[#040406]/30 text-center space-y-3">
+                  <Clock className="h-8 w-8 text-slate-600 animate-pulse" />
+                  <p className="font-mono text-xs uppercase tracking-widest text-slate-500">
+                    No Timing Report uploaded.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Large Preview Container */}
+                  <div className="relative group rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#040406]/90 overflow-hidden flex flex-col">
+                    {/* Header Bar */}
+                    <div className="px-5 py-3 border-b border-[rgba(255,255,255,0.04)] bg-[#08080c] flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="font-mono text-[10px] text-slate-400 uppercase tracking-wider">
+                          Active Report: {timingAssets[activeTimingIndex]?.name}
+                        </span>
+                      </div>
+                      <span className="font-mono text-[10px] text-slate-500">
+                        [{activeTimingIndex + 1} / {timingAssets.length}] • {timingAssets[activeTimingIndex]?.size}
+                      </span>
+                    </div>
+
+                    {/* Image Area */}
+                    <div className="relative min-h-[320px] sm:min-h-[420px] max-h-[500px] flex items-center justify-center p-6 bg-[#020204]">
+                      {/* Left cycling arrow */}
+                      {timingAssets.length > 1 && (
+                        <button
+                          onClick={() => setActiveTimingIndex(prev => (prev - 1 + timingAssets.length) % timingAssets.length)}
+                          className="absolute left-4 z-10 p-2.5 rounded-full border border-slate-800 bg-black/60 text-slate-400 hover:text-white hover:border-[#a78bfa]/50 hover:bg-[#a78bfa]/10 transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          title="Previous Timing Report"
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                        </button>
+                      )}
+
+                      {/* Display Image */}
+                      <div
+                        onClick={() => setIsFullscreenTiming(true)}
+                        className="w-full h-full flex items-center justify-center cursor-zoom-in relative max-h-[380px] sm:max-h-[400px]"
                       >
-                        <ImageIcon className="h-3 w-3" />
-                        <span>{file.name}</span>
-                        <span className="text-slate-600 font-bold">({file.size})</span>
+                        <img
+                          src={timingAssets[activeTimingIndex]?.url}
+                          alt={formatCaption(timingAssets[activeTimingIndex]?.name, "Timing Report")}
+                          referrerPolicy="no-referrer"
+                          className="max-w-full max-h-full object-contain hover:scale-[1.01] transition-transform duration-300"
+                        />
+                        
+                        {/* Hover Overlay Zoom Prompt */}
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                          <div className="px-3.5 py-2 rounded-lg bg-black/80 border border-slate-800 text-white font-mono text-[10px] uppercase tracking-wider flex items-center gap-2 shadow-xl">
+                            <Maximize2 className="h-3 w-3 text-[#a78bfa]" />
+                            <span>Click to Enlarge</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right cycling arrow */}
+                      {timingAssets.length > 1 && (
+                        <button
+                          onClick={() => setActiveTimingIndex(prev => (prev + 1) % timingAssets.length)}
+                          className="absolute right-4 z-10 p-2.5 rounded-full border border-slate-800 bg-black/60 text-slate-400 hover:text-white hover:border-[#a78bfa]/50 hover:bg-[#a78bfa]/10 transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          title="Next Timing Report"
+                        >
+                          <ArrowLeft className="h-4 w-4 rotate-180" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Footer Caption */}
+                    <div className="px-5 py-4 border-t border-[rgba(255,255,255,0.04)] bg-[#08080c] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="space-y-1">
+                        <span className="font-mono text-[9px] uppercase tracking-widest text-[#a78bfa] block">
+                          // Timing Analysis
+                        </span>
+                        <h4 className="font-sans text-sm sm:text-base font-black text-white uppercase tracking-wide">
+                          {formatCaption(timingAssets[activeTimingIndex]?.name, "Timing Report")}
+                        </h4>
+                      </div>
+                      <button
+                        onClick={() => setIsFullscreenTiming(true)}
+                        className="font-mono text-[10px] uppercase tracking-wider text-[#a78bfa] hover:text-white border border-[#a78bfa]/20 hover:border-[#a78bfa]/65 bg-[#a78bfa]/5 hover:bg-[#a78bfa]/15 rounded-lg px-4 py-2 transition-all cursor-pointer flex items-center gap-2 self-start sm:self-auto"
+                      >
+                        <Maximize2 className="h-3 w-3" />
+                        <span>Enlarge Capture</span>
                       </button>
-                    ))}
+                    </div>
                   </div>
+
+                  {/* Thumbnail Selector Grid */}
+                  {timingAssets.length > 1 && (
+                    <div className="space-y-2">
+                      <span className="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                        // Timing Reports Gallery ({timingAssets.length})
+                      </span>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                        {timingAssets.map((file, idx) => {
+                          const isActive = idx === activeTimingIndex;
+                          return (
+                            <button
+                              key={file.name}
+                              onClick={() => setActiveTimingIndex(idx)}
+                              className={`p-2.5 rounded-xl border text-left transition-all flex flex-col gap-2 cursor-pointer group hover:bg-[#0c0c12] ${isActive ? 'bg-[#0c0c12] border-[#a78bfa]/50 shadow-lg shadow-[#a78bfa]/5' : 'bg-[#040406]/60 border-slate-900 hover:border-slate-700'}`}
+                            >
+                              {/* Tiny Image Thumbnail */}
+                              <div className="w-full h-16 rounded bg-black flex items-center justify-center overflow-hidden border border-[rgba(255,255,255,0.02)]">
+                                <img
+                                  src={file.url}
+                                  alt={formatCaption(file.name, "Timing Report")}
+                                  referrerPolicy="no-referrer"
+                                  className="max-w-full max-h-full object-contain opacity-50 group-hover:opacity-100 transition-opacity"
+                                />
+                              </div>
+                              <div className="space-y-0.5 truncate w-full">
+                                <span className={`font-sans text-[10px] font-bold tracking-wide block truncate transition-colors ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}>
+                                  {formatCaption(file.name, "").trim()}
+                                </span>
+                                <span className="font-mono text-[9px] text-slate-600 block">
+                                  {file.size}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-
-              <EngineeringViewer
-                src={selectedTiming || `/projects/${slug}/timing-analysis.png`}
-                alt={`${project.name} — Timing Slack Report & Analysis`}
-                fallbackType="timing"
-                projectId={project.id}
-              />
             </div>
           </Section>
 
           {/* Section 07: Floorplan & Physical Design */}
           <Section index="07" title="Floorplan &amp; Physical Design" icon={<Grid className="h-4 w-4" />}>
-            <div className="space-y-4">
-              <p className="font-sans text-xs text-slate-400 leading-relaxed">
-                Silicon boundary core configurations showing input/output pad routing ring, macro-cell distributions, and dual-layer core power networks structure.
+            <div className="space-y-6">
+              <p className="font-sans text-sm text-slate-300 leading-relaxed">
+                Physical floorplan designs showing core placement boundaries, SRAM macros, standard cell areas, and power grid planning.
               </p>
 
-              {/* Dynamic asset picker */}
-              {discoveredAssets["floorplan"] && discoveredAssets["floorplan"].length > 0 && (
-                <div className="p-3 bg-[#a78bfa]/5 border border-[#a78bfa]/10 rounded-lg flex flex-col gap-1.5 font-mono text-[10px]">
-                  <span className="text-[#a78bfa] uppercase tracking-wider font-bold">// DISCOVERED FLOORPLAN IMAGES ({discoveredAssets["floorplan"].length}):</span>
-                  <div className="flex flex-wrap gap-2">
-                    {discoveredAssets["floorplan"].map((file) => (
-                      <button
-                        key={file.name}
-                        onClick={() => setSelectedFloorplan(file.url)}
-                        className={`px-2 py-0.5 rounded border text-left transition-all flex items-center gap-1.5 cursor-pointer ${selectedFloorplan === file.url ? 'bg-[#a78bfa]/20 border-[#a78bfa]/40 text-white font-bold' : 'bg-[#040406]/60 border-slate-800 text-slate-400 hover:text-white'}`}
+              {floorplanAssets.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 px-6 rounded-xl border border-dashed border-slate-800 bg-[#040406]/30 text-center space-y-3">
+                  <Grid className="h-8 w-8 text-slate-600 animate-pulse" />
+                  <p className="font-mono text-xs uppercase tracking-widest text-slate-500">
+                    No Floorplan uploaded.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Large Preview Container */}
+                  <div className="relative group rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#040406]/90 overflow-hidden flex flex-col">
+                    {/* Header Bar */}
+                    <div className="px-5 py-3 border-b border-[rgba(255,255,255,0.04)] bg-[#08080c] flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="font-mono text-[10px] text-slate-400 uppercase tracking-wider">
+                          Active Floorplan: {floorplanAssets[activeFloorplanIndex]?.name}
+                        </span>
+                      </div>
+                      <span className="font-mono text-[10px] text-slate-500">
+                        [{activeFloorplanIndex + 1} / {floorplanAssets.length}] • {floorplanAssets[activeFloorplanIndex]?.size}
+                      </span>
+                    </div>
+
+                    {/* Image Area */}
+                    <div className="relative min-h-[320px] sm:min-h-[420px] max-h-[500px] flex items-center justify-center p-6 bg-[#020204]">
+                      {/* Left cycling arrow */}
+                      {floorplanAssets.length > 1 && (
+                        <button
+                          onClick={() => setActiveFloorplanIndex(prev => (prev - 1 + floorplanAssets.length) % floorplanAssets.length)}
+                          className="absolute left-4 z-10 p-2.5 rounded-full border border-slate-800 bg-black/60 text-slate-400 hover:text-white hover:border-[#a78bfa]/50 hover:bg-[#a78bfa]/10 transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          title="Previous Floorplan"
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                        </button>
+                      )}
+
+                      {/* Display Image */}
+                      <div
+                        onClick={() => setIsFullscreenFloorplan(true)}
+                        className="w-full h-full flex items-center justify-center cursor-zoom-in relative max-h-[380px] sm:max-h-[400px]"
                       >
-                        <ImageIcon className="h-3 w-3" />
-                        <span>{file.name}</span>
-                        <span className="text-slate-600 font-bold">({file.size})</span>
+                        <img
+                          src={floorplanAssets[activeFloorplanIndex]?.url}
+                          alt={formatCaption(floorplanAssets[activeFloorplanIndex]?.name, "Physical Floorplan")}
+                          referrerPolicy="no-referrer"
+                          className="max-w-full max-h-full object-contain hover:scale-[1.01] transition-transform duration-300"
+                        />
+                        
+                        {/* Hover Overlay Zoom Prompt */}
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                          <div className="px-3.5 py-2 rounded-lg bg-black/80 border border-slate-800 text-white font-mono text-[10px] uppercase tracking-wider flex items-center gap-2 shadow-xl">
+                            <Maximize2 className="h-3 w-3 text-[#a78bfa]" />
+                            <span>Click to Enlarge</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right cycling arrow */}
+                      {floorplanAssets.length > 1 && (
+                        <button
+                          onClick={() => setActiveFloorplanIndex(prev => (prev + 1) % floorplanAssets.length)}
+                          className="absolute right-4 z-10 p-2.5 rounded-full border border-slate-800 bg-black/60 text-slate-400 hover:text-white hover:border-[#a78bfa]/50 hover:bg-[#a78bfa]/10 transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          title="Next Floorplan"
+                        >
+                          <ArrowLeft className="h-4 w-4 rotate-180" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Footer Caption */}
+                    <div className="px-5 py-4 border-t border-[rgba(255,255,255,0.04)] bg-[#08080c] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="space-y-1">
+                        <span className="font-mono text-[9px] uppercase tracking-widest text-[#a78bfa] block">
+                          // Floorplan &amp; Physical Design
+                        </span>
+                        <h4 className="font-sans text-sm sm:text-base font-black text-white uppercase tracking-wide">
+                          {formatCaption(floorplanAssets[activeFloorplanIndex]?.name, "Physical Floorplan")}
+                        </h4>
+                      </div>
+                      <button
+                        onClick={() => setIsFullscreenFloorplan(true)}
+                        className="font-mono text-[10px] uppercase tracking-wider text-[#a78bfa] hover:text-white border border-[#a78bfa]/20 hover:border-[#a78bfa]/65 bg-[#a78bfa]/5 hover:bg-[#a78bfa]/15 rounded-lg px-4 py-2 transition-all cursor-pointer flex items-center gap-2 self-start sm:self-auto"
+                      >
+                        <Maximize2 className="h-3 w-3" />
+                        <span>Enlarge Capture</span>
                       </button>
-                    ))}
+                    </div>
                   </div>
+
+                  {/* Thumbnail Selector Grid */}
+                  {floorplanAssets.length > 1 && (
+                    <div className="space-y-2">
+                      <span className="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                        // Floorplan Gallery ({floorplanAssets.length})
+                      </span>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                        {floorplanAssets.map((file, idx) => {
+                          const isActive = idx === activeFloorplanIndex;
+                          return (
+                            <button
+                              key={file.name}
+                              onClick={() => setActiveFloorplanIndex(idx)}
+                              className={`p-2.5 rounded-xl border text-left transition-all flex flex-col gap-2 cursor-pointer group hover:bg-[#0c0c12] ${isActive ? 'bg-[#0c0c12] border-[#a78bfa]/50 shadow-lg shadow-[#a78bfa]/5' : 'bg-[#040406]/60 border-slate-900 hover:border-slate-700'}`}
+                            >
+                              {/* Tiny Image Thumbnail */}
+                              <div className="w-full h-16 rounded bg-black flex items-center justify-center overflow-hidden border border-[rgba(255,255,255,0.02)]">
+                                <img
+                                  src={file.url}
+                                  alt={formatCaption(file.name, "Physical Floorplan")}
+                                  referrerPolicy="no-referrer"
+                                  className="max-w-full max-h-full object-contain opacity-50 group-hover:opacity-100 transition-opacity"
+                                />
+                              </div>
+                              <div className="space-y-0.5 truncate w-full">
+                                <span className={`font-sans text-[10px] font-bold tracking-wide block truncate transition-colors ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}>
+                                  {formatCaption(file.name, "").trim()}
+                                </span>
+                                <span className="font-mono text-[9px] text-slate-600 block">
+                                  {file.size}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-
-              <EngineeringViewer
-                src={selectedFloorplan || `/projects/${slug}/floorplan.png`}
-                alt={`${project.name} — Core Floorplan Macro Placement`}
-                fallbackType="floorplan"
-                projectId={project.id}
-              />
             </div>
           </Section>
 
           {/* Section 08: Layout & GDSII Mask */}
           <Section index="08" title="Layout &amp; GDSII Mask" icon={<Activity className="h-4 w-4" />}>
-            <div className="space-y-4">
-              <p className="font-sans text-xs text-slate-400 leading-relaxed">
-                Final physical layouts mapping overlapping transistors, gate structures, standard cell placings, and metal grids.
+            <div className="space-y-6">
+              <p className="font-sans text-sm text-slate-300 leading-relaxed">
+                Silicon boundary physical layouts mapping poly-gates, diffusion areas, multi-layer metal grids, and contact vias.
               </p>
 
-              {/* Dynamic asset picker */}
-              {((discoveredAssets["layout"] && discoveredAssets["layout"].length > 0) || (discoveredAssets["gds"] && discoveredAssets["gds"].length > 0)) && (
-                <div className="p-3 bg-[#a78bfa]/5 border border-[#a78bfa]/10 rounded-lg flex flex-col gap-1.5 font-mono text-[10px]">
-                  <span className="text-[#a78bfa] uppercase tracking-wider font-bold">// DISCOVERED LAYOUT / GDS IMAGES:</span>
-                  <div className="flex flex-wrap gap-2">
-                    {discoveredAssets["layout"]?.map((file) => (
-                      <button
-                        key={file.name}
-                        onClick={() => setSelectedLayout(file.url)}
-                        className={`px-2 py-0.5 rounded border text-left transition-all flex items-center gap-1.5 cursor-pointer ${selectedLayout === file.url ? 'bg-[#a78bfa]/20 border-[#a78bfa]/40 text-white font-bold' : 'bg-[#040406]/60 border-slate-800 text-slate-400 hover:text-white'}`}
+              {gdsiiAssets.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 px-6 rounded-xl border border-dashed border-slate-800 bg-[#040406]/30 text-center space-y-3">
+                  <Activity className="h-8 w-8 text-slate-600 animate-pulse" />
+                  <p className="font-mono text-xs uppercase tracking-widest text-slate-500">
+                    No GDSII image uploaded.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Large Preview Container */}
+                  <div className="relative group rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#040406]/90 overflow-hidden flex flex-col">
+                    {/* Header Bar */}
+                    <div className="px-5 py-3 border-b border-[rgba(255,255,255,0.04)] bg-[#08080c] flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="font-mono text-[10px] text-slate-400 uppercase tracking-wider">
+                          Active Layout: {gdsiiAssets[activeGdsiiIndex]?.name}
+                        </span>
+                      </div>
+                      <span className="font-mono text-[10px] text-slate-500">
+                        [{activeGdsiiIndex + 1} / {gdsiiAssets.length}] • {gdsiiAssets[activeGdsiiIndex]?.size}
+                      </span>
+                    </div>
+
+                    {/* Image Area */}
+                    <div className="relative min-h-[320px] sm:min-h-[420px] max-h-[500px] flex items-center justify-center p-6 bg-[#020204]">
+                      {/* Left cycling arrow */}
+                      {gdsiiAssets.length > 1 && (
+                        <button
+                          onClick={() => setActiveGdsiiIndex(prev => (prev - 1 + gdsiiAssets.length) % gdsiiAssets.length)}
+                          className="absolute left-4 z-10 p-2.5 rounded-full border border-slate-800 bg-black/60 text-slate-400 hover:text-white hover:border-[#a78bfa]/50 hover:bg-[#a78bfa]/10 transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          title="Previous Layout"
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                        </button>
+                      )}
+
+                      {/* Display Image */}
+                      <div
+                        onClick={() => setIsFullscreenGdsii(true)}
+                        className="w-full h-full flex items-center justify-center cursor-zoom-in relative max-h-[380px] sm:max-h-[400px]"
                       >
-                        <ImageIcon className="h-3 w-3" />
-                        <span>Layout: {file.name}</span>
-                        <span className="text-slate-600 font-bold">({file.size})</span>
-                      </button>
-                    ))}
-                    {discoveredAssets["gds"]?.map((file) => (
+                        <img
+                          src={gdsiiAssets[activeGdsiiIndex]?.url}
+                          alt={formatCaption(gdsiiAssets[activeGdsiiIndex]?.name, "GDSII Mask Layout")}
+                          referrerPolicy="no-referrer"
+                          className="max-w-full max-h-full object-contain hover:scale-[1.01] transition-transform duration-300"
+                        />
+                        
+                        {/* Hover Overlay Zoom Prompt */}
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                          <div className="px-3.5 py-2 rounded-lg bg-black/80 border border-slate-800 text-white font-mono text-[10px] uppercase tracking-wider flex items-center gap-2 shadow-xl">
+                            <Maximize2 className="h-3 w-3 text-[#a78bfa]" />
+                            <span>Click to Enlarge</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right cycling arrow */}
+                      {gdsiiAssets.length > 1 && (
+                        <button
+                          onClick={() => setActiveGdsiiIndex(prev => (prev + 1) % gdsiiAssets.length)}
+                          className="absolute right-4 z-10 p-2.5 rounded-full border border-slate-800 bg-black/60 text-slate-400 hover:text-white hover:border-[#a78bfa]/50 hover:bg-[#a78bfa]/10 transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          title="Next Layout"
+                        >
+                          <ArrowLeft className="h-4 w-4 rotate-180" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Footer Caption */}
+                    <div className="px-5 py-4 border-t border-[rgba(255,255,255,0.04)] bg-[#08080c] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="space-y-1">
+                        <span className="font-mono text-[9px] uppercase tracking-widest text-[#a78bfa] block">
+                          // Layout &amp; GDSII Mask
+                        </span>
+                        <h4 className="font-sans text-sm sm:text-base font-black text-white uppercase tracking-wide">
+                          {formatCaption(gdsiiAssets[activeGdsiiIndex]?.name, "GDSII Mask Layout")}
+                        </h4>
+                      </div>
                       <button
-                        key={file.name}
-                        onClick={() => setSelectedLayout(file.url)}
-                        className={`px-2 py-0.5 rounded border text-left transition-all flex items-center gap-1.5 cursor-pointer ${selectedLayout === file.url ? 'bg-[#a78bfa]/20 border-[#a78bfa]/40 text-white font-bold' : 'bg-[#040406]/60 border-slate-800 text-slate-400 hover:text-white'}`}
+                        onClick={() => setIsFullscreenGdsii(true)}
+                        className="font-mono text-[10px] uppercase tracking-wider text-[#a78bfa] hover:text-white border border-[#a78bfa]/20 hover:border-[#a78bfa]/65 bg-[#a78bfa]/5 hover:bg-[#a78bfa]/15 rounded-lg px-4 py-2 transition-all cursor-pointer flex items-center gap-2 self-start sm:self-auto"
                       >
-                        <Layers className="h-3 w-3" />
-                        <span>GDSII: {file.name} <span className="text-[#a78bfa] text-[8px] font-bold">[Future Support]</span></span>
-                        <span className="text-slate-600 font-bold">({file.size})</span>
+                        <Maximize2 className="h-3 w-3" />
+                        <span>Enlarge Capture</span>
                       </button>
-                    ))}
+                    </div>
                   </div>
+
+                  {/* Thumbnail Selector Grid */}
+                  {gdsiiAssets.length > 1 && (
+                    <div className="space-y-2">
+                      <span className="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                        // Layout Gallery ({gdsiiAssets.length})
+                      </span>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                        {gdsiiAssets.map((file, idx) => {
+                          const isActive = idx === activeGdsiiIndex;
+                          return (
+                            <button
+                              key={file.name}
+                              onClick={() => setActiveGdsiiIndex(idx)}
+                              className={`p-2.5 rounded-xl border text-left transition-all flex flex-col gap-2 cursor-pointer group hover:bg-[#0c0c12] ${isActive ? 'bg-[#0c0c12] border-[#a78bfa]/50 shadow-lg shadow-[#a78bfa]/5' : 'bg-[#040406]/60 border-slate-900 hover:border-slate-700'}`}
+                            >
+                              {/* Tiny Image Thumbnail */}
+                              <div className="w-full h-16 rounded bg-black flex items-center justify-center overflow-hidden border border-[rgba(255,255,255,0.02)]">
+                                <img
+                                  src={file.url}
+                                  alt={formatCaption(file.name, "GDSII Mask Layout")}
+                                  referrerPolicy="no-referrer"
+                                  className="max-w-full max-h-full object-contain opacity-50 group-hover:opacity-100 transition-opacity"
+                                />
+                              </div>
+                              <div className="space-y-0.5 truncate w-full">
+                                <span className={`font-sans text-[10px] font-bold tracking-wide block truncate transition-colors ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}>
+                                  {formatCaption(file.name, "").trim()}
+                                </span>
+                                <span className="font-mono text-[9px] text-slate-600 block">
+                                  {file.size}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-
-              <EngineeringViewer
-                src={selectedLayout || `/projects/${slug}/layout.png`}
-                alt={`${project.name} — Silicon Layout Mask`}
-                fallbackType="gds"
-                projectId={project.id}
-              />
             </div>
           </Section>
 
@@ -999,6 +1330,39 @@ make -C obj_dir -f Vcore.mk
               onPrev={() => setActiveWaveformIndex(idx => (idx - 1 + simulationWaveforms.length) % simulationWaveforms.length)}
               onNext={() => setActiveWaveformIndex(idx => (idx + 1) % simulationWaveforms.length)}
               getCaption={getCaptionFromFilename}
+            />
+          )}
+
+          {isFullscreenFloorplan && (
+            <FullscreenGalleryViewer
+              images={floorplanAssets}
+              activeIndex={activeFloorplanIndex}
+              onClose={() => setIsFullscreenFloorplan(false)}
+              onPrev={() => setActiveFloorplanIndex(idx => (idx - 1 + floorplanAssets.length) % floorplanAssets.length)}
+              onNext={() => setActiveFloorplanIndex(idx => (idx + 1) % floorplanAssets.length)}
+              getCaption={(name) => formatCaption(name, "Physical Floorplan")}
+            />
+          )}
+
+          {isFullscreenTiming && (
+            <FullscreenGalleryViewer
+              images={timingAssets}
+              activeIndex={activeTimingIndex}
+              onClose={() => setIsFullscreenTiming(false)}
+              onPrev={() => setActiveTimingIndex(idx => (idx - 1 + timingAssets.length) % timingAssets.length)}
+              onNext={() => setActiveTimingIndex(idx => (idx + 1) % timingAssets.length)}
+              getCaption={(name) => formatCaption(name, "Timing Report")}
+            />
+          )}
+
+          {isFullscreenGdsii && (
+            <FullscreenGalleryViewer
+              images={gdsiiAssets}
+              activeIndex={activeGdsiiIndex}
+              onClose={() => setIsFullscreenGdsii(false)}
+              onPrev={() => setActiveGdsiiIndex(idx => (idx - 1 + gdsiiAssets.length) % gdsiiAssets.length)}
+              onNext={() => setActiveGdsiiIndex(idx => (idx + 1) % gdsiiAssets.length)}
+              getCaption={(name) => formatCaption(name, "GDSII Mask Layout")}
             />
           )}
         </AnimatePresence>
