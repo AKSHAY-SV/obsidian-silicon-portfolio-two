@@ -147,7 +147,13 @@
       }
     ],
     "gds": [],
-    "gdsii": [],
+    "gdsii": [
+      {
+        "name": "gdsii without fill.png",
+        "url": "/projects/rv32im-soc-processor/gdsii/gdsii without fill.png",
+        "size": "180.0 KB"
+      }
+    ],
     "rtl": [],
     "block-diagram": [],
     "documentation": []
