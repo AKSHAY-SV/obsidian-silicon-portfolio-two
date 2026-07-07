@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
+import { Readable } from "stream";
 import { adminDb, default as admin } from "../../lib/firebaseAdmin";
 
 dotenv.config();
@@ -10,9 +11,12 @@ const db = adminDb;
 const PROJECT_FILES: Record<string, string> = {
   "rv32im-rtl-src": "SoC with Custom RISC-V Processor.zip",
   "axi4-crossbar-test": "APB Compliant UART Peripheral with Integrated FSM.zip",
+  "uart-rtl-src": "APB Compliant UART Peripheral with Integrated FSM.zip",
   "rv32im-floorplan-def": "RV32IM 5-Stage Pipeline.zip",
   "8-bit-cpu": "8 Bit CPU.zip",
+  "8-bit-cpu-rtl-src": "8 Bit CPU.zip",
   "l2-cache-gate-netlist": "Cache Memory.zip",
+  "cache-rtl-src": "Cache Memory.zip",
 };
 
 // Beautiful dark glassmorphism HTML error page
@@ -142,10 +146,24 @@ export default async function handler(req: any, res: any) {
       return renderErrorPage(res, 404, "Resource Missing", "The requested project asset is not configured or could not be found.");
     }
 
-    const filePath = path.join(process.cwd(), "public", "downloads", fileName);
-    if (!fs.existsSync(filePath)) {
-      console.error(`File not found on disk: ${filePath}`);
-      return renderErrorPage(res, 404, "Asset Offline", "The file is physically missing from our engineering directory.");
+    // Validate that missing environment variables produce clear server errors
+    const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+    const GITHUB_OWNER = process.env.GITHUB_OWNER;
+    const GITHUB_PRIVATE_REPO = process.env.GITHUB_PRIVATE_REPO || "obsidian-private-assets";
+
+    if (!GITHUB_TOKEN || !GITHUB_OWNER || !GITHUB_PRIVATE_REPO) {
+      const missingVars = [];
+      if (!GITHUB_TOKEN) missingVars.push("GITHUB_TOKEN");
+      if (!GITHUB_OWNER) missingVars.push("GITHUB_OWNER");
+      if (!GITHUB_PRIVATE_REPO) missingVars.push("GITHUB_PRIVATE_REPO");
+      
+      console.error(`Missing required GitHub environment configuration: ${missingVars.join(", ")}`);
+      return renderErrorPage(
+        res,
+        500,
+        "Server Configuration Error",
+        `The server is missing the required GitHub environment configuration: ${missingVars.join(", ")}.`
+      );
     }
 
     // 4. Update the token usage count
@@ -183,19 +201,90 @@ export default async function handler(req: any, res: any) {
       result: "success"
     });
 
-    // 7. Stream the file directly
+    // 7. Fetch the file from the private GitHub repository via GitHub API
     res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
     res.setHeader("Content-Type", "application/zip");
-    
-    const fileStream = fs.createReadStream(filePath);
-    fileStream.on("error", (err) => {
-      console.error("Stream pipe error:", err);
-      if (!res.headersSent) {
-        return renderErrorPage(res, 500, "Streaming Failure", "A server error occurred while transferring files.");
-      }
-    });
 
-    fileStream.pipe(res);
+    let response: any;
+    try {
+      // Path 1: public/downloads/filename
+      const url1 = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_PRIVATE_REPO}/contents/public/downloads/${encodeURIComponent(fileName)}`;
+      response = await fetch(url1, {
+        headers: {
+          "Authorization": `token ${GITHUB_TOKEN}`,
+          "Accept": "application/vnd.github.v3.raw",
+          "User-Agent": "Obsidian-Silicon-Portfolio"
+        }
+      });
+
+      if (response.status === 404) {
+        // Path 2: downloads/filename
+        const url2 = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_PRIVATE_REPO}/contents/downloads/${encodeURIComponent(fileName)}`;
+        response = await fetch(url2, {
+          headers: {
+            "Authorization": `token ${GITHUB_TOKEN}`,
+            "Accept": "application/vnd.github.v3.raw",
+            "User-Agent": "Obsidian-Silicon-Portfolio"
+          }
+        });
+      }
+
+      if (response.status === 404) {
+        // Path 3: root filename
+        const url3 = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_PRIVATE_REPO}/contents/${encodeURIComponent(fileName)}`;
+        response = await fetch(url3, {
+          headers: {
+            "Authorization": `token ${GITHUB_TOKEN}`,
+            "Accept": "application/vnd.github.v3.raw",
+            "User-Agent": "Obsidian-Silicon-Portfolio"
+          }
+        });
+      }
+    } catch (fetchErr: any) {
+      console.error("[GitHub Connection Failed]", fetchErr);
+      return renderErrorPage(
+        res,
+        500,
+        "GitHub Integration Error",
+        `Failed to establish connection with private repository: ${fetchErr.message || fetchErr}`
+      );
+    }
+
+    if (!response.ok) {
+      console.error(`GitHub API returned error: ${response.status} ${response.statusText}`);
+      let errorMessage = `Failed to retrieve the file from the private engineering repository. HTTP Status: ${response.status} ${response.statusText}`;
+      try {
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          // not JSON
+        }
+        if (errorData && errorData.message) {
+          errorMessage += ` - GitHub Details: ${errorData.message}`;
+        } else if (errorText && errorText.length < 200) {
+          errorMessage += ` - Details: ${errorText}`;
+        }
+      } catch (e) {
+        // ignore
+      }
+      return renderErrorPage(
+        res,
+        response.status === 403 || response.status === 401 ? 403 : 500,
+        "Asset Offline",
+        errorMessage
+      );
+    }
+
+    // 8. Stream file contents directly to user using Node streaming
+    if (response.body) {
+      Readable.fromWeb(response.body as any).pipe(res);
+    } else {
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      res.send(buffer);
+    }
 
   } catch (error: any) {
     console.error("[Serve Download Error]", error);

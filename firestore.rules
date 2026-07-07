@@ -39,12 +39,21 @@ service cloud.firestore {
       // Access allowed only to validated administrators
       allow read: if isAdmin();
       
-      // Anyone can submit a valid access request
-      allow create: if isValidId(requestId) && isValidPortfolioAccessRequest(incoming());
+      // Anyone can submit a valid access request, but it must be initialized as 'pending' 
+      // without administrative properties like portalToken, allowedProjects, or approval signatures.
+      allow create: if isValidId(requestId) && 
+                    isValidPortfolioAccessRequest(incoming()) && 
+                    incoming().status == 'pending' &&
+                    !('portalToken' in incoming()) &&
+                    !('allowedProjects' in incoming()) &&
+                    !('approvedAt' in incoming()) &&
+                    !('approvedBy' in incoming()) &&
+                    !('rejectedAt' in incoming()) &&
+                    !('rejectedBy' in incoming());
       
       // Updates are restricted to administrators modifying state/timestamps
       allow update: if isAdmin() && isValidPortfolioAccessRequest(incoming()) && (
-        (incoming().diff(existing()).affectedKeys().hasOnly(['status', 'approvedAt', 'approvedBy', 'rejectedAt', 'rejectedBy']))
+        (incoming().diff(existing()).affectedKeys().hasOnly(['status', 'approvedAt', 'approvedBy', 'rejectedAt', 'rejectedBy', 'allowedProjects', 'portalToken']))
       );
 
       // Deletes are restricted to administrators
@@ -56,8 +65,13 @@ service cloud.firestore {
       // Access allowed only to validated administrators
       allow read: if isAdmin();
       
-      // Anyone can submit a valid access request
-      allow create: if isValidId(requestId) && isValidAccessRequest(incoming());
+      // Anyone can submit a valid access request, but it must be initialized as 'pending'
+      // without any admin review parameters.
+      allow create: if isValidId(requestId) && 
+                    isValidAccessRequest(incoming()) && 
+                    incoming().status == 'pending' &&
+                    !('reviewedAt' in incoming()) &&
+                    !('reviewedBy' in incoming());
       
       // Updates are restricted to administrators
       allow update: if isAdmin() && isValidAccessRequest(incoming()) && (

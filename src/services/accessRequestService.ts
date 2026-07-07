@@ -174,25 +174,18 @@ export async function rejectRequest(id: string): Promise<void> {
  * @returns {Promise<AccessRequest | null>} The latest AccessRequest object or null if not found
  */
 export async function getRequestByEmail(email: string): Promise<AccessRequest | null> {
-  const colRef = collection(db, COLLECTION_NAME);
-  const q = query(
-    colRef,
-    where('email', '==', email),
-    orderBy('createdAt', 'desc'),
-    limit(1)
-  );
-
   try {
-    const querySnapshot = await getDocs(q);
-    if (querySnapshot.empty) {
-      return null;
+    const response = await fetch(`/api/downloads/check-request?email=${encodeURIComponent(email)}`);
+    if (!response.ok) {
+      throw new Error(`Server returned HTTP ${response.status}`);
     }
-    const docSnap = querySnapshot.docs[0];
-    return {
-      ...docSnap.data(),
-      id: docSnap.id,
-    } as AccessRequest;
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.error || 'Check request status failed');
+    }
+    return data.request;
   } catch (error) {
-    handleFirestoreError(error, OperationType.GET_BY_EMAIL, COLLECTION_NAME);
+    console.error('[Get Request By Email Error]', error);
+    throw new Error(`Access verification service failure: ${error instanceof Error ? error.message : String(error)}`);
   }
 }

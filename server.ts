@@ -6,6 +6,7 @@ import sendEmailHandler from "./api/send-email";
 import requestActionHandler from "./api/admin/request-action";
 import auditLogsHandler from "./api/admin/audit-logs";
 import initHandler from "./api/downloads/init";
+import checkRequestHandler from "./api/downloads/check-request";
 import requestDownloadHandler from "./api/downloads/request-download";
 import serveHandler from "./api/downloads/serve";
 import analyticsHandler from "./api/downloads/analytics";
@@ -38,6 +39,7 @@ app.get("/api/admin/audit-logs", auditLogsHandler);
 
 // API: Downloads Management Endpoints
 app.get("/api/downloads/init", initHandler);
+app.get("/api/downloads/check-request", checkRequestHandler);
 app.post("/api/downloads/request-download", requestDownloadHandler);
 app.get("/api/downloads/serve", serveHandler);
 app.get("/api/downloads/analytics", analyticsHandler);

@@ -59,11 +59,11 @@ export default async function handler(req: any, res: any) {
       servingPrefix: project
     });
 
-    // Special mapping: 5-stage-pipeline-riscv -> rv32im-core
+    // Special mapping: 5-stage-pipeline-riscv -> rv32im-soc-processor
     if (project === "5-stage-pipeline-riscv") {
       scanTargets.push({
-        dirPath: path.join(process.cwd(), "public", "projects", "rv32im-core"),
-        servingPrefix: "5-stage-pipeline-riscv"
+        dirPath: path.join(process.cwd(), "public", "projects", "rv32im-soc-processor"),
+        servingPrefix: "rv32im-soc-processor"
       });
     }
 
