@@ -139,7 +139,13 @@
     "synthesis": [],
     "timing": [],
     "layout": [],
-    "floorplan": [],
+    "floorplan": [
+      {
+        "name": "floorplan.svg",
+        "url": "/projects/rv32im-soc-processor/floorplan/floorplan.svg",
+        "size": "21.6 KB"
+      }
+    ],
     "gds": [],
     "gdsii": [],
     "rtl": [],
