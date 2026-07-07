@@ -141,11 +141,16 @@
       {
         "name": "Static Timing  Analysis.png",
         "url": "/projects/rv32im-soc-processor/timing/Static Timing  Analysis.png",
-        "size": "1.4 MB"
+        "size": "2.4 MB"
       }
     ],
     "layout": [],
     "floorplan": [
+      {
+        "name": "floorplan.png",
+        "url": "/projects/rv32im-soc-processor/floorplan/floorplan.png",
+        "size": "471.7 KB"
+      },
       {
         "name": "floorplan.svg",
         "url": "/projects/rv32im-soc-processor/floorplan/floorplan.svg",
@@ -157,7 +162,17 @@
       {
         "name": "gdsii without fill.png",
         "url": "/projects/rv32im-soc-processor/gdsii/gdsii without fill.png",
-        "size": "180.0 KB"
+        "size": "331.1 KB"
+      },
+      {
+        "name": "implementation results.png",
+        "url": "/projects/rv32im-soc-processor/gdsii/implementation results.png",
+        "size": "2.5 MB"
+      },
+      {
+        "name": "routing layers.png",
+        "url": "/projects/rv32im-soc-processor/gdsii/routing layers.png",
+        "size": "245.4 KB"
       }
     ],
     "rtl": [],
