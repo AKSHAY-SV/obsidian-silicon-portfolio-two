@@ -18,19 +18,21 @@ export const DETAILED_PROJECTS: ProjectDetail[] = [
       { label: 'NPU Output', value: '4.2 TOPS INT8' }
     ],
     designObjectives: [
-      'Design a fully compliant RV32IM base integer processor core with dynamic hazard-forwarding logic.',
-      'Achieve timing closure at 1.2 GHz clock frequency under nominal corner checks on TSMC N7 FinFET process node.',
-      'Construct a robust power mesh on Metal 7 & Metal 8 layers ensuring static/dynamic IR drop remains strictly below 2% of VDD.',
-      'Optimize layout congestion near highly parallel FPU and Systolic Matrix NPU accelerators.'
+      'Design and implement a fully functional 32-bit RV32IM 5-stage pipelined RISC-V processor.',
+      'Implement advanced pipeline mechanisms including data forwarding, hazard detection, branch flushing, and dedicated pipeline registers.',
+      'Integrate ROM, RAM, AXI Decoder, and a complete APB peripheral subsystem into a unified SoC architecture.',
+      'Functionally verify every hardware module individually and validate complete SoC operation through RTL simulation.',
+      'Complete the full RTL-to-GDSII implementation flow including synthesis, floorplanning, placement, clock tree synthesis (CTS), routing, DRC, LVS, and final GDSII generation.'
     ],
     features: [
-      'Quad-core asymmetric cluster with L1/L2 Cache Coherency (MESI protocol).',
-      'Pipelined Radix-4 Booth Integer Multiplier and 8-cycle non-restoring divider unit.',
-      'Systolic INT8 Matrix Multiplication Accelerator delivering 4.2 TOPS.',
-      '128-bit Non-blocking AXI4 crossbar with concurrent read/write transactions.',
-      'Complete APB peripheral subsystem including UART, SPI, GPIO, timers and PLIC controller.'
+      '32-bit RV32IM processor implementing a 5-stage pipeline consisting of IF, ID, EX, MEM, and WB stages.',
+      'Full support for the RV32I Base ISA, RV32M extension, and a custom Multiply-Accumulate (MAC) accelerator.',
+      'Optimized pipeline execution using data forwarding, hazard detection, and branch flushing mechanisms.',
+      'Integrated instruction ROM, data RAM, AXI Decoder, and APB Interconnect architecture.',
+      'Memory-mapped peripheral subsystem including GPIO, UART, SPI, Timer, and Platform-Level Interrupt Controller (PLIC).',
+      'Successfully verified using Icarus Verilog and GTKWave, followed by complete RTL-to-GDSII implementation using the OpenLane physical design flow.'
     ],
-    overview: 'This project showcases a mixed-signal 5-stage pipelined RISC-V System-on-Chip fabricated using TSMC 7nm FinFET PDK tools. Co-designed alongside systolic matrix NPU co-processors, the chip interfaces over high-bandwidth 128-bit non-blocking AXI4 bus rings to minimize latency. The core utilizes multi-source clock tree synthesis to maintain global clock skew below 35ps.',
+    overview: 'This project presents the design and implementation of a 32-bit RV32IM RISC-V System-on-Chip (SoC) featuring a custom 5-stage pipelined processor developed entirely in Verilog HDL. The SoC integrates instruction memory, data memory, an AXI Decoder, and a complete APB peripheral subsystem comprising GPIO, UART, SPI, Timer, and PLIC. The design has been functionally verified through comprehensive RTL simulation and successfully implemented through the complete RTL-to-GDSII physical design flow using open-source VLSI tools.',
     architecture: 'Features a heterogeneous multi-master arrangement. CPU cores and NPU blocks act as master entities communicating with direct set-associative tag arrays and coherent L2 cache line managers. Low-speed peripherals register accesses are translated through a standard APB bridge to preserve main memory bandwidth.',
     challenges: 'Dynamic voltage fluctuations (dynamic IR drop) in the core processor boundary exceeded 85mV during heavy Systolic NPU arithmetic stress, leading to register setup violations.',
     solutions: 'Re-synthesized the power grid mesh using an enhanced dual-grid matrix on Metal 7/Metal 8, placed decaps directly flanking structural modules, and staggered NPU state pipeline stages to limit current surges.',
@@ -58,19 +60,21 @@ export const DETAILED_PROJECTS: ProjectDetail[] = [
       { label: 'Lut Count', value: '4,280 LUTs (FPGA)' }
     ],
     designObjectives: [
-      'Implement synthesizable SystemVerilog pipelines with full hazard detection and forward-bypass paths.',
-      'Ensure zero latch warnings during synthesis to maintain predictable synchronous behavior.',
-      'Verify timing closure at 150MHz target frequency on standard Artix-7 FPGA boards.',
-      'Achieve maximum instruction throughput exceeding 0.95 IPC on classic branch workloads.'
+      'Design and implement a fully functional 32-bit RV32IM 5-stage pipelined RISC-V processor.',
+      'Implement advanced pipeline mechanisms including data forwarding, hazard detection, branch flushing, and dedicated pipeline registers.',
+      'Integrate ROM, RAM, AXI Decoder, and a complete APB peripheral subsystem into a unified SoC architecture.',
+      'Functionally verify every hardware module individually and validate complete SoC operation through RTL simulation.',
+      'Complete the full RTL-to-GDSII implementation flow including synthesis, floorplanning, placement, clock tree synthesis (CTS), routing, DRC, LVS, and final GDSII generation.'
     ],
     features: [
-      'Classical 5-Stage Pipeline: Fetch (IF), Decode (ID), Execute (EX), Memory (MEM), Write-back (WB).',
-      'High-performance ALU coupled with dynamic hazard detection and register forwarding paths.',
-      'Iterative Radix-4 Booth Multiplier and State-Machine driven Division units.',
-      'Branch Target Buffer (BTB) featuring dynamic 2-bit branch prediction buffers.',
-      'Integrated interfaces to private 4KB instruction cache and 4KB data cache.'
+      '32-bit RV32IM processor implementing a 5-stage pipeline consisting of IF, ID, EX, MEM, and WB stages.',
+      'Full support for the RV32I Base ISA, RV32M extension, and a custom Multiply-Accumulate (MAC) accelerator.',
+      'Optimized pipeline execution using data forwarding, hazard detection, and branch flushing mechanisms.',
+      'Integrated instruction ROM, data RAM, AXI Decoder, and APB Interconnect architecture.',
+      'Memory-mapped peripheral subsystem including GPIO, UART, SPI, Timer, and Platform-Level Interrupt Controller (PLIC).',
+      'Successfully verified using Icarus Verilog and GTKWave, followed by complete RTL-to-GDSII implementation using the OpenLane physical design flow.'
     ],
-    overview: 'A synthesizable, cycle-accurate classical 5-stage pipeline RISC-V core. Incorporates dynamic hazard-bypassing structures to forward operands directly from Memory or Writeback pipeline registers, reducing stalls to 0 for consecutive ALU operations.',
+    overview: 'This project presents the design and implementation of a 32-bit RV32IM RISC-V System-on-Chip (SoC) featuring a custom 5-stage pipelined processor developed entirely in Verilog HDL. The SoC integrates instruction memory, data memory, an AXI Decoder, and a complete APB peripheral subsystem comprising GPIO, UART, SPI, Timer, and PLIC. The design has been functionally verified through comprehensive RTL simulation and successfully implemented through the complete RTL-to-GDSII physical design flow using open-source VLSI tools.',
     architecture: 'Classic Harvard processor layout separating instruction fetch buses from data memory ports. Dedicated dual-port Register File allows parallel instruction register decode while execution blocks process ALU operands forwarded from downstream stages.',
     challenges: 'Read-After-Write (RAW) data hazards in tight instructions loops introduced up to 2-cycle stalls, degrading overall IPC from 1.0 to 0.74.',
     solutions: 'Constructed an Operand Forwarding Unit that inspects register destinations in EX, MEM and WB stages and routes raw register buffers directly back to ALU input muxes.',

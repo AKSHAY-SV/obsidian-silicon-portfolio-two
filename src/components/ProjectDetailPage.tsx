@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ProjectDetail } from '../types';
 import { DOWNLOAD_ASSETS } from '../data';
 import {
-  ArrowLeft, Cpu, Layers, ShieldCheck, Microscope, FileText,
-  Sliders, Activity, Image as ImageIcon, BookOpen, Clock, PlayCircle,
-  Eye, GitBranch, Grid, Zap, Ruler, Lock, Unlock, Download,
-  CheckCircle, AlertTriangle, HelpCircle, Terminal, RefreshCw, ZoomIn, ZoomOut, Maximize2,
+  ArrowLeft, Cpu, Layers, ShieldCheck, Microscope,
+  Sliders, Activity, Image as ImageIcon, Clock, PlayCircle,
+  Eye, GitBranch, Grid, Zap, Lock, Unlock, Download,
+  CheckCircle, AlertTriangle, HelpCircle, RefreshCw, ZoomIn, ZoomOut, Maximize2,
   Waves, X, Move
 } from 'lucide-react';
 
@@ -48,7 +48,6 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
 
   // Selected asset states for each section
   const [selectedBlockDiagram, setSelectedBlockDiagram] = useState<string | null>(null);
-  const [selectedRtlDiagram, setSelectedRtlDiagram] = useState<string | null>(null);
   const [selectedSimulation, setSelectedSimulation] = useState<string | null>(null);
   const [selectedTiming, setSelectedTiming] = useState<string | null>(null);
   const [selectedFloorplan, setSelectedFloorplan] = useState<string | null>(null);
@@ -69,6 +68,10 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
   // GDSII gallery state
   const [activeGdsiiIndex, setActiveGdsiiIndex] = useState(0);
   const [isFullscreenGdsii, setIsFullscreenGdsii] = useState(false);
+
+  // Block Diagram gallery state
+  const [activeBlockDiagramIndex, setActiveBlockDiagramIndex] = useState(0);
+  const [isFullscreenBlockDiagram, setIsFullscreenBlockDiagram] = useState(false);
 
   useEffect(() => {
     const fetchAssets = async () => {
@@ -107,7 +110,6 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
           // Auto-select first discovered file for each section if any
           const assets = data.assets;
           if (assets["block-diagram"]?.length > 0) setSelectedBlockDiagram(assets["block-diagram"][0].url);
-          if (assets["rtl"]?.length > 0) setSelectedRtlDiagram(assets["rtl"][0].url);
           if (assets["simulation"]?.length > 0) setSelectedSimulation(assets["simulation"][0].url);
           if (assets["timing"]?.length > 0) setSelectedTiming(assets["timing"][0].url);
           if (assets["floorplan"]?.length > 0) setSelectedFloorplan(assets["floorplan"][0].url);
@@ -267,6 +269,15 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
   const floorplanAssets = discoveredAssets["floorplan"] || [];
   const timingAssets = discoveredAssets["timing"] || [];
   const gdsiiAssets = discoveredAssets["gdsii"] || discoveredAssets["gds"] || [];
+
+  const blockDiagramAssetsRaw = discoveredAssets["block-diagram"] || [];
+  const blockDiagramImages = blockDiagramAssetsRaw.length > 0
+    ? blockDiagramAssetsRaw
+    : [{
+        name: "Microarchitectural Block Diagram",
+        url: selectedBlockDiagram || (project.diagram && (/^(https?:)?\/\//.test(project.diagram) || project.diagram?.startsWith('/')) ? project.diagram : `/projects/${slug}/block-diagram.png`),
+        size: "N/A"
+      }];
 
   const formatCaption = (filename: string, defaultSuffix: string): string => {
     if (!filename) return "";
@@ -474,15 +485,79 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
           {/* Section 02: Architecture Specifications */}
           <Section index="02" title="Architecture Specifications" icon={<Layers className="h-4 w-4" />}>
             <div className="space-y-4">
-              <p className="font-sans text-sm text-slate-300 leading-relaxed">{project.architecture}</p>
-              
-              {/* Structural microarchitecture details */}
-              <div className="rounded-lg border border-[rgba(255,255,255,0.04)] bg-[#040406]/40 p-4 font-mono text-[11px] text-slate-400 space-y-2">
-                <span className="text-[#a78bfa] block font-bold">// MICROARCHITECTURAL LOGIC DECLARATION</span>
-                <p className="font-sans text-xs leading-relaxed">
-                  The design executes strictly isolated register stages mapped to logical entities. Under concurrent read access profiles, a prioritized internal bypass routing module establishes forward connections directly from downstream write buffer cells to input ports, avoiding timing degradation.
-                </p>
-              </div>
+              {(project.id === 'rv32im-soc-processor' || project.id === '5-stage-pipeline-riscv') ? (
+                <>
+                  <p className="font-sans text-sm text-slate-300 leading-relaxed">
+                    The proposed System-on-Chip (SoC) is built around a 32-bit RV32IM 5-stage pipelined RISC-V processor developed entirely in Verilog HDL. The processor interfaces with Instruction Memory, Data Memory, an AXI Address Decoder, and an APB Interconnect. The APB subsystem provides memory-mapped communication with GPIO, UART, SPI, Timer, and PLIC peripherals, resulting in a modular and scalable SoC architecture that has been functionally verified through RTL simulation and successfully implemented through the complete RTL-to-GDSII physical design flow.
+                  </p>
+                  
+                  {/* Microarchitectural Design Overview card */}
+                  <div className="rounded-lg border border-[rgba(255,255,255,0.04)] bg-[#040406]/40 p-4 font-mono text-[11px] text-slate-400 space-y-2">
+                    <span className="text-[#a78bfa] block font-bold">// MICROARCHITECTURAL DESIGN OVERVIEW</span>
+                    <p className="font-sans text-xs text-slate-300 leading-relaxed">
+                      The processor implements a classic 5-stage pipeline consisting of Instruction Fetch (IF), Instruction Decode (ID), Execute (EX), Memory Access (MEM), and Write Back (WB) stages. Pipeline efficiency is improved using dedicated pipeline registers, data forwarding, hazard detection, branch flushing, and a write-before-read register file. Memory transactions are routed through the AXI Address Decoder, while peripheral accesses are managed through the APB Interconnect, enabling efficient communication with all integrated peripherals.
+                    </p>
+                  </div>
+
+                  {/* Three compact specification cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Card 1 */}
+                    <div className="rounded-lg border border-[rgba(255,255,255,0.04)] bg-[#040406]/40 p-4 font-mono text-[11px] text-slate-400 space-y-2">
+                      <span className="text-[#a78bfa] block font-bold">// PROCESSOR</span>
+                      <div className="space-y-1 text-slate-300 font-sans text-xs">
+                        <p>• Architecture: RV32IM</p>
+                        <p>• Data Width: 32-bit</p>
+                        <p>• Pipeline: 5 Stages (IF, ID, EX, MEM, WB)</p>
+                        <p>• Language: Verilog HDL</p>
+                        <p className="pt-1 font-bold text-[10px] text-slate-400 font-mono">// FEATURES</p>
+                        <div className="pl-3 text-slate-400 text-[11px] space-y-0.5">
+                          <p>- Data Forwarding</p>
+                          <p>- Hazard Detection</p>
+                          <p>- Branch Flushing</p>
+                          <p>- MAC Accelerator</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card 2 */}
+                    <div className="rounded-lg border border-[rgba(255,255,255,0.04)] bg-[#040406]/40 p-4 font-mono text-[11px] text-slate-400 space-y-2">
+                      <span className="text-[#a78bfa] block font-bold">// MEMORY SYSTEM</span>
+                      <div className="space-y-1 text-slate-300 font-sans text-xs">
+                        <p>• Instruction ROM</p>
+                        <p>• Data RAM</p>
+                        <p>• AXI Address Decoder</p>
+                        <p>• Memory-Mapped Architecture</p>
+                        <p>• Instruction &amp; Data Separation</p>
+                      </div>
+                    </div>
+
+                    {/* Card 3 */}
+                    <div className="rounded-lg border border-[rgba(255,255,255,0.04)] bg-[#040406]/40 p-4 font-mono text-[11px] text-slate-400 space-y-2">
+                      <span className="text-[#a78bfa] block font-bold">// PERIPHERAL SUBSYSTEM</span>
+                      <div className="space-y-1 text-slate-300 font-sans text-xs">
+                        <p>• APB Interconnect</p>
+                        <p>• GPIO</p>
+                        <p>• UART</p>
+                        <p>• SPI</p>
+                        <p>• Timer</p>
+                        <p>• Platform-Level Interrupt Controller (PLIC)</p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="font-sans text-sm text-slate-300 leading-relaxed">{project.architecture}</p>
+                  
+                  {/* Structural microarchitecture details */}
+                  <div className="rounded-lg border border-[rgba(255,255,255,0.04)] bg-[#040406]/40 p-4 font-mono text-[11px] text-slate-400 space-y-2">
+                    <span className="text-[#a78bfa] block font-bold">// MICROARCHITECTURAL LOGIC DECLARATION</span>
+                    <p className="font-sans text-xs leading-relaxed">
+                      The design executes strictly isolated register stages mapped to logical entities. Under concurrent read access profiles, a prioritized internal bypass routing module establishes forward connections directly from downstream write buffer cells to input ports, avoiding timing degradation.
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
           </Section>
 
@@ -498,10 +573,13 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
                 <div className="p-3 bg-[#a78bfa]/5 border border-[#a78bfa]/10 rounded-lg flex flex-col gap-1.5 font-mono text-[10px]">
                   <span className="text-[#a78bfa] uppercase tracking-wider font-bold">// DISCOVERED BLOCK DIAGRAMS ({discoveredAssets["block-diagram"].length}):</span>
                   <div className="flex flex-wrap gap-2">
-                    {discoveredAssets["block-diagram"].map((file) => (
+                    {discoveredAssets["block-diagram"].map((file, idx) => (
                       <button
                         key={file.name}
-                        onClick={() => setSelectedBlockDiagram(file.url)}
+                        onClick={() => {
+                          setSelectedBlockDiagram(file.url);
+                          setActiveBlockDiagramIndex(idx);
+                        }}
                         className={`px-2 py-0.5 rounded border text-left transition-all flex items-center gap-1.5 cursor-pointer ${selectedBlockDiagram === file.url ? 'bg-[#a78bfa]/20 border-[#a78bfa]/40 text-white font-bold' : 'bg-[#040406]/60 border-slate-800 text-slate-400 hover:text-white'}`}
                       >
                         <ImageIcon className="h-3 w-3" />
@@ -518,48 +596,13 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
                 alt={`${project.name} — Block Diagram`}
                 fallbackType="block"
                 projectId={project.id}
+                onEnlarge={() => setIsFullscreenBlockDiagram(true)}
               />
             </div>
           </Section>
 
-          {/* Section 04: RTL Diagrams */}
-          <Section index="04" title="RTL Diagrams" icon={<Ruler className="h-4 w-4" />}>
-            <div className="space-y-4">
-              <p className="font-sans text-xs text-slate-400 leading-relaxed">
-                Gate-level schematic traces showing multiplexers, registers arrays, adder layers, and clock gating units compiled from logical hardware entries.
-              </p>
-
-              {/* Dynamic asset picker */}
-              {discoveredAssets["rtl"] && discoveredAssets["rtl"].length > 0 && (
-                <div className="p-3 bg-[#a78bfa]/5 border border-[#a78bfa]/10 rounded-lg flex flex-col gap-1.5 font-mono text-[10px]">
-                  <span className="text-[#a78bfa] uppercase tracking-wider font-bold">// DISCOVERED RTL DIAGRAMS ({discoveredAssets["rtl"].length}):</span>
-                  <div className="flex flex-wrap gap-2">
-                    {discoveredAssets["rtl"].map((file) => (
-                      <button
-                        key={file.name}
-                        onClick={() => setSelectedRtlDiagram(file.url)}
-                        className={`px-2 py-0.5 rounded border text-left transition-all flex items-center gap-1.5 cursor-pointer ${selectedRtlDiagram === file.url ? 'bg-[#a78bfa]/20 border-[#a78bfa]/40 text-white font-bold' : 'bg-[#040406]/60 border-slate-800 text-slate-400 hover:text-white'}`}
-                      >
-                        <ImageIcon className="h-3 w-3" />
-                        <span>{file.name}</span>
-                        <span className="text-slate-600 font-bold">({file.size})</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <EngineeringViewer
-                src={selectedRtlDiagram || `/projects/${slug}/rtl-diagram.png`}
-                alt={`${project.name} — Gate Level RTL Schematic`}
-                fallbackType="rtl"
-                projectId={project.id}
-              />
-            </div>
-          </Section>
-
-          {/* Section 05: Simulation Outputs & Waveforms */}
-          <Section index="05" title="Simulation Outputs &amp; Waveforms" icon={<PlayCircle className="h-4 w-4" />}>
+          {/* Section 04: Simulation Outputs & Waveforms */}
+          <Section index="04" title="Simulation Outputs &amp; Waveforms" icon={<PlayCircle className="h-4 w-4" />}>
             <div className="space-y-6">
               <p className="font-sans text-sm text-slate-300 leading-relaxed">
                 Hardware-level timing trace outputs and logic verification waveforms captured during simulation cycles of SoC sub-modules. Click any waveform to enter fullscreen inspection mode.
@@ -692,8 +735,8 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
             </div>
           </Section>
 
-          {/* Section 06: Timing Reports & Analysis */}
-          <Section index="06" title="Timing Reports &amp; Analysis" icon={<Clock className="h-4 w-4" />}>
+          {/* Section 05: Timing Reports & Analysis */}
+          <Section index="05" title="Timing Reports &amp; Analysis" icon={<Clock className="h-4 w-4" />}>
             <div className="space-y-6">
               <p className="font-sans text-sm text-slate-300 leading-relaxed">
                 Static timing analysis reports indicating setup and hold Slack, critical paths, and frequency parameters.
@@ -832,8 +875,8 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
             </div>
           </Section>
 
-          {/* Section 07: Floorplan & Physical Design */}
-          <Section index="07" title="Floorplan &amp; Physical Design" icon={<Grid className="h-4 w-4" />}>
+          {/* Section 06: Floorplan & Physical Design */}
+          <Section index="06" title="Floorplan &amp; Physical Design" icon={<Grid className="h-4 w-4" />}>
             <div className="space-y-6">
               <p className="font-sans text-sm text-slate-300 leading-relaxed">
                 Physical floorplan designs showing core placement boundaries, SRAM macros, standard cell areas, and power grid planning.
@@ -972,8 +1015,8 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
             </div>
           </Section>
 
-          {/* Section 08: Layout & GDSII Mask */}
-          <Section index="08" title="Layout &amp; GDSII Mask" icon={<Activity className="h-4 w-4" />}>
+          {/* Section 07: Layout & GDSII Mask */}
+          <Section index="07" title="Layout &amp; GDSII Mask" icon={<Activity className="h-4 w-4" />}>
             <div className="space-y-6">
               <p className="font-sans text-sm text-slate-300 leading-relaxed">
                 Silicon boundary physical layouts mapping poly-gates, diffusion areas, multi-layer metal grids, and contact vias.
@@ -1112,8 +1155,8 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
             </div>
           </Section>
 
-          {/* Section 09: Secure Engineering Downloads (INTEGRATED) */}
-          <Section index="09" title="Secure Engineering Downloads" icon={<ShieldCheck className="h-4 w-4 text-emerald-400 animate-pulse" />}>
+          {/* Section 08: Secure Engineering Downloads (INTEGRATED) */}
+          <Section index="08" title="Secure Engineering Downloads" icon={<ShieldCheck className="h-4 w-4 text-emerald-400 animate-pulse" />}>
             <div className="space-y-6">
               <p className="font-sans text-sm text-slate-300 leading-relaxed">
                 Access to restricted silicon source codes, synthesizable RTL files, gate netlists, and physical DEF floorplans is strictly limited to authorized personnel.
@@ -1258,94 +1301,6 @@ export default function ProjectDetailPage({ project, onBack }: ProjectDetailPage
               )}
             </div>
           </Section>
-
-          {/* Section 10: Technical Documentation & Toolchain */}
-          <Section index="10" title="Technical Documentation &amp; Toolchain" icon={<BookOpen className="h-4 w-4" />}>
-            <div className="space-y-6">
-              <p className="font-sans text-sm text-slate-300 leading-relaxed">
-                Step-by-step engineering toolchain setup guide to build, compile, synthesize, and verify this design package.
-              </p>
-
-              {/* Dynamic documentation asset cards */}
-              {discoveredAssets["documentation"] && discoveredAssets["documentation"].length > 0 && (
-                <div className="p-4 rounded-xl border border-[rgba(255,255,255,0.04)] bg-[#040406]/50 space-y-3 font-mono">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#a78bfa] border-b border-[rgba(255,255,255,0.05)] pb-1.5 flex items-center gap-2">
-                    <FileText className="h-3.5 w-3.5" />
-                    Uploaded Project Documentation ({discoveredAssets["documentation"].length})
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {discoveredAssets["documentation"].map((file) => (
-                      <a
-                        key={file.name}
-                        href={file.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        referrerPolicy="no-referrer"
-                        className="flex items-center justify-between p-3 rounded-lg border border-slate-800 bg-[#0c0c11] hover:border-[#a78bfa]/45 hover:bg-[#a78bfa]/5 transition-all text-xs cursor-pointer group"
-                      >
-                        <div className="flex items-center gap-2.5 overflow-hidden">
-                          <FileText className="h-4 w-4 text-[#a78bfa] shrink-0" />
-                          <span className="text-slate-300 truncate group-hover:text-white transition-colors">{file.name}</span>
-                        </div>
-                        <span className="text-[10px] text-slate-500 font-bold shrink-0">({file.size})</span>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Dynamic code tabs based on active project */}
-              <div className="rounded-xl border border-[rgba(255,255,255,0.05)] bg-[#040406]/80 overflow-hidden font-mono text-xs">
-                
-                {/* Header terminal tab bar */}
-                <div className="px-5 py-2.5 bg-[#0d0d12] border-b border-[rgba(255,255,255,0.04)] flex items-center justify-between text-slate-500 text-[10px]">
-                  <span className="flex items-center gap-1.5 uppercase font-bold tracking-wider">
-                    <Terminal className="h-3.5 w-3.5 text-[#a78bfa]" />
-                    bash shell // compiler_toolchain.sh
-                  </span>
-                  <span className="bg-[#a78bfa]/10 text-[#a78bfa] px-1.5 py-0.2 rounded font-bold uppercase tracking-wider">TSMC 7nm PDK / FPGA</span>
-                </div>
-
-                {/* Shell text content */}
-                <div className="p-5 text-slate-300 space-y-4 overflow-x-auto whitespace-pre leading-relaxed select-all">
-                  {slug === 'rv32im-soc-processor' && (
-                    <code>
-{`# 1. Environment and PDK path sourcing
-export TSMC_7NM_PDK="/opt/foundry/tsmc/7nm/N7"
-export SYNOPSYS_DC_LICENSE="27000@lic.internal"
-
-# 2. Run logical synthesis inside Synopsys Design Compiler
-dc_shell -f synthesis/syn_script.tcl -x "set_app_var target_library \\$TSMC_7NM_PDK/db/standard_cells.db"
-
-# 3. Check physical timing slack (WNS / TNS)
-innovus -init physical/innovus_config.tcl -files physical/floorplan_script.tcl`}
-                    </code>
-                  )}
-
-                  {slug === '5-stage-pipeline-riscv' && (
-                    <code>
-{`# 1. Compile SystemVerilog RTL utilizing Verilator
-verilator --cc rtl/core.sv --exe tb/tb_core.cpp \\
-          -Irtl/caches -GDATA_WIDTH=32 -Wall --trace
-
-# 2. Build executable compiler binary
-make -C obj_dir -f Vcore.mk
-
-# 3. Execute functional test cycles verification
-./obj_dir/Vcore +HEX_PROGRAM=tests/hex/fibonacci.hex`}
-                    </code>
-                  )}
-                </div>
-              </div>
-            </div>
-          </Section>
-
-          {/* Section 11: Future Improvements */}
-          <Section index="11" title="Future Improvements" icon={<Zap className="h-4 w-4 text-emerald-400" />}>
-            <p className="font-sans text-sm text-slate-300 leading-relaxed">
-              {project.futureImprovements}
-            </p>
-          </Section>
         </div>
 
         {/* Bottom Portfolio Link */}
@@ -1408,6 +1363,29 @@ make -C obj_dir -f Vcore.mk
               getCaption={(name) => formatCaption(name, "GDSII Mask Layout")}
             />
           )}
+
+          {isFullscreenBlockDiagram && (
+            <FullscreenGalleryViewer
+              images={blockDiagramImages}
+              activeIndex={activeBlockDiagramIndex}
+              onClose={() => setIsFullscreenBlockDiagram(false)}
+              onPrev={() => {
+                if (blockDiagramImages.length > 1) {
+                  const nextIdx = (activeBlockDiagramIndex - 1 + blockDiagramImages.length) % blockDiagramImages.length;
+                  setActiveBlockDiagramIndex(nextIdx);
+                  setSelectedBlockDiagram(blockDiagramImages[nextIdx].url);
+                }
+              }}
+              onNext={() => {
+                if (blockDiagramImages.length > 1) {
+                  const nextIdx = (activeBlockDiagramIndex + 1) % blockDiagramImages.length;
+                  setActiveBlockDiagramIndex(nextIdx);
+                  setSelectedBlockDiagram(blockDiagramImages[nextIdx].url);
+                }
+              }}
+              getCaption={(name) => formatCaption(name, "Block Diagram")}
+            />
+          )}
         </AnimatePresence>
       </div>
     </div>
@@ -1436,8 +1414,12 @@ function FullscreenGalleryViewer({
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const isDragging = React.useRef(false);
   const start = React.useRef({ x: 0, y: 0, ox: 0, oy: 0 });
+  const scrollPos = React.useRef(0);
 
   React.useEffect(() => {
+    // Save current scroll position when modal opens
+    scrollPos.current = window.scrollY;
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
       if (e.key === 'ArrowLeft') {
@@ -1458,6 +1440,8 @@ function FullscreenGalleryViewer({
     return () => {
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = prevOverflow;
+      // Restore scroll position exactly on unmount
+      window.scrollTo(0, scrollPos.current);
     };
   }, [onClose, onPrev, onNext]);
 
@@ -1495,25 +1479,48 @@ function FullscreenGalleryViewer({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
-      className="fixed inset-0 z-[100] bg-[#050508]/98 backdrop-blur-md flex flex-col"
+      className="fixed inset-0 z-[100] bg-[#050508]/90 backdrop-blur-md flex flex-col"
       onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={() => { isDragging.current = false; }}
       onMouseLeave={() => { isDragging.current = false; }}
+      onClick={(e) => {
+        // Close if clicking the main container background
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
     >
+      {/* Floating Close Button in top-right, always visible */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+        onMouseDown={(e) => e.stopPropagation()}
+        className="fixed top-6 right-6 z-[110] h-10 w-10 flex items-center justify-center rounded-full border border-[rgba(255,255,255,0.15)] bg-[#0a0a10]/80 text-slate-300 hover:text-white hover:border-red-500/50 hover:bg-red-500/10 transition-colors cursor-pointer shadow-lg"
+        title="Close (ESC)"
+      >
+        <X className="h-5 w-5" />
+      </button>
+
       {/* Header toolbar */}
-      <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-[rgba(255,255,255,0.06)] bg-[#0a0a0e]/90">
+      <div 
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+        className="flex items-center justify-between gap-4 px-6 py-4 border-b border-[rgba(255,255,255,0.06)] bg-[#0a0a0e]/90 z-10"
+      >
         <div className="space-y-0.5">
           <span className="font-mono text-[9px] uppercase tracking-widest text-[#a78bfa] block">
-            // Fullscreen Verification Waveform Viewer
+            // Fullscreen Engineering Asset Viewer
           </span>
           <span className="font-sans text-sm font-black text-white uppercase tracking-wide">
             {getCaption(current.name)}
           </span>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pr-12">
           {/* Zoom Level indicator and buttons */}
           <button
             onClick={() => setScale(s => Math.max(s - 0.25, 0.25))}
@@ -1539,37 +1546,41 @@ function FullscreenGalleryViewer({
           >
             <RefreshCw className="h-4 w-4" />
           </button>
-
-          <span className="h-6 w-[1px] bg-slate-800 mx-1" />
-
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="h-8 w-8 flex items-center justify-center rounded-md border border-[rgba(255,255,255,0.06)] bg-[#121218] text-slate-300 hover:text-white hover:border-red-500/50 hover:bg-red-500/10 transition-colors cursor-pointer"
-            title="Close (ESC)"
-          >
-            <X className="h-4 w-4" />
-          </button>
         </div>
       </div>
 
       {/* Main image canvas with Left/Right arrows */}
-      <div className="flex-1 relative flex items-center justify-center overflow-hidden select-none">
+      <div 
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+        className="flex-1 relative flex items-center justify-center overflow-hidden select-none"
+      >
         {/* Left Arrow */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onPrev();
-            reset();
-          }}
-          className="absolute left-6 z-10 p-4 rounded-full border border-slate-800 bg-[#0a0a0f]/80 text-slate-300 hover:text-white hover:border-[#a78bfa]/50 hover:bg-[#a78bfa]/10 transition-all cursor-pointer"
-          title="Previous (ArrowLeft)"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
+        {images.length > 1 && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onPrev();
+              reset();
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            className="absolute left-6 z-10 p-4 rounded-full border border-slate-800 bg-[#0a0a0f]/80 text-slate-300 hover:text-white hover:border-[#a78bfa]/50 hover:bg-[#a78bfa]/10 transition-all cursor-pointer"
+            title="Previous (ArrowLeft)"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        )}
 
         {/* Scalable, draggable Image */}
         <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              onClose();
+            }
+          }}
           className="w-full h-full flex items-center justify-center"
           style={{ cursor: scale > 1 ? (isDragging.current ? 'grabbing' : 'grab') : 'default' }}
         >
@@ -1577,6 +1588,10 @@ function FullscreenGalleryViewer({
             src={resolveAssetUrl(current.url)}
             alt={getCaption(current.name)}
             draggable={false}
+            onDragStart={(e) => e.preventDefault()}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
             style={{
               transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
               transformOrigin: 'center center',
@@ -1584,30 +1599,41 @@ function FullscreenGalleryViewer({
               maxWidth: '85%',
               maxHeight: '85%',
             }}
-            className="object-contain pointer-events-none"
+            className="object-contain"
           />
         </div>
 
         {/* Right Arrow */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onNext();
-            reset();
-          }}
-          className="absolute right-6 z-10 p-4 rounded-full border border-slate-800 bg-[#0a0a0f]/80 text-slate-300 hover:text-white hover:border-[#a78bfa]/50 hover:bg-[#a78bfa]/10 transition-all cursor-pointer"
-          title="Next (ArrowRight)"
-        >
-          <ArrowLeft className="h-5 w-5 rotate-180" />
-        </button>
+        {images.length > 1 && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onNext();
+              reset();
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            className="absolute right-6 z-10 p-4 rounded-full border border-slate-800 bg-[#0a0a0f]/80 text-slate-300 hover:text-white hover:border-[#a78bfa]/50 hover:bg-[#a78bfa]/10 transition-all cursor-pointer"
+            title="Next (ArrowRight)"
+          >
+            <ArrowLeft className="h-5 w-5 rotate-180" />
+          </button>
+        )}
       </div>
 
       {/* Footer controls / info */}
-      <div className="px-6 py-4 border-t border-[rgba(255,255,255,0.05)] bg-[#0a0a0e]/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 font-mono text-[10px] uppercase tracking-widest">
+      <div 
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+        className="px-6 py-4 border-t border-[rgba(255,255,255,0.05)] bg-[#0a0a0e]/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 font-mono text-[10px] uppercase tracking-widest z-10"
+      >
         <div className="flex items-center gap-2">
-          <span>Waveform {activeIndex + 1} of {images.length}</span>
-          <span className="text-slate-800">•</span>
-          <span className="text-slate-400">{current.size}</span>
+          <span>Asset {activeIndex + 1} of {images.length}</span>
+          {current.size && current.size !== "N/A" && (
+            <>
+              <span className="text-slate-800">•</span>
+              <span className="text-slate-400">{current.size}</span>
+            </>
+          )}
         </div>
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5"><Move className="h-3 w-3" /> Drag to Pan</span>
@@ -1664,11 +1690,12 @@ function Section({
 interface EngineeringViewerProps {
   src: string;
   alt: string;
-  fallbackType: 'block' | 'rtl' | 'waveform' | 'timing' | 'floorplan' | 'gds';
+  fallbackType: 'block' | 'waveform' | 'timing' | 'floorplan' | 'gds';
   projectId: string;
+  onEnlarge?: () => void;
 }
 
-function EngineeringViewer({ src, alt, fallbackType, projectId }: EngineeringViewerProps) {
+function EngineeringViewer({ src, alt, fallbackType, projectId, onEnlarge }: EngineeringViewerProps) {
   const [failed, setFailed] = useState(false);
   const [scale, setScale] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -1681,9 +1708,6 @@ function EngineeringViewer({ src, alt, fallbackType, projectId }: EngineeringVie
     M2_Metal2: true,
     VIA_Vias: true
   });
-
-  // Schematic CDC signal trace selection
-  const [rtlPath, setRtlPath] = useState<string | null>(null);
 
   // Timing STA path selection
   const [staPathTab, setStaPathTab] = useState<'path1' | 'path2'>('path1');
@@ -1755,77 +1779,6 @@ function EngineeringViewer({ src, alt, fallbackType, projectId }: EngineeringVie
             <div className="flex justify-between items-center mt-3 border-t border-[rgba(255,255,255,0.03)] pt-2 text-[10px] font-mono text-slate-500">
               <span>Status: <span className="text-[#a78bfa] font-bold">Synthesizable RTL Block Schematic</span></span>
               <span>Grid scale: 1.0mm</span>
-            </div>
-          </div>
-        );
-
-      case 'rtl':
-        return (
-          <div className="w-full h-full flex flex-col justify-between p-4 bg-[#040406]/90 relative overflow-hidden" style={{ minHeight: '380px' }}>
-            <div className="flex justify-between items-center mb-3 border-b border-[rgba(255,255,255,0.03)] pb-2">
-              <span className="font-mono text-[9px] uppercase tracking-widest text-[#a78bfa]">// INTERACTIVE GATE-LEVEL TRACE ROUTING</span>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setRtlPath(rtlPath === 'data' ? null : 'data')}
-                  className={`font-mono text-[8px] uppercase tracking-wider px-2 py-0.5 rounded border transition-all cursor-pointer ${rtlPath === 'data' ? 'bg-[#a78bfa]/20 text-[#a78bfa] border-[#a78bfa]/40 font-bold' : 'bg-[#121217] text-slate-500 border-slate-800'}`}
-                >
-                  Trace Data Path
-                </button>
-                <button
-                  onClick={() => setRtlPath(rtlPath === 'clock' ? null : 'clock')}
-                  className={`font-mono text-[8px] uppercase tracking-wider px-2 py-0.5 rounded border transition-all cursor-pointer ${rtlPath === 'clock' ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 font-bold' : 'bg-[#121217] text-slate-500 border-slate-800'}`}
-                >
-                  Trace Clock Path
-                </button>
-              </div>
-            </div>
-
-            <div className="flex-1 flex items-center justify-center">
-              <svg viewBox="0 0 800 350" className="w-full max-h-[280px] h-auto select-none">
-                <g fill="none" strokeWidth="1.5">
-                  
-                  {/* Gate wire paths */}
-                  <path d="M 50 100 L 200 100" stroke={rtlPath === 'data' ? '#a78bfa' : '#334'} strokeWidth={rtlPath === 'data' ? 2.5 : 1.5} className="transition-all duration-300" />
-                  <path d="M 50 140 L 200 140" stroke={rtlPath === 'data' ? '#a78bfa' : '#334'} strokeWidth={rtlPath === 'data' ? 2.5 : 1.5} className="transition-all duration-300" />
-                  <path d="M 270 120 L 380 120" stroke={rtlPath === 'data' ? '#a78bfa' : '#334'} strokeWidth={rtlPath === 'data' ? 2.5 : 1.5} className="transition-all duration-300" />
-                  <path d="M 380 120 L 380 150" stroke={rtlPath === 'data' ? '#a78bfa' : '#334'} strokeWidth={rtlPath === 'data' ? 2.5 : 1.5} className="transition-all duration-300" />
-                  <path d="M 350 240 L 420 240" stroke={rtlPath === 'data' ? '#a78bfa' : '#334'} strokeWidth={rtlPath === 'data' ? 2.5 : 1.5} className="transition-all duration-300" />
-                  <path d="M 470 170 L 560 170" stroke={rtlPath === 'data' ? '#a78bfa' : '#334'} strokeWidth={rtlPath === 'data' ? 2.5 : 1.5} className="transition-all duration-300" />
-                  
-                  {/* Clock wire paths */}
-                  <path d="M 120 300 L 450 300" stroke={rtlPath === 'clock' ? '#f59e0b' : '#334'} strokeWidth={rtlPath === 'clock' ? 2.5 : 1.5} className="transition-all duration-300" />
-                  <path d="M 450 300 L 450 210" stroke={rtlPath === 'clock' ? '#f59e0b' : '#334'} strokeWidth={rtlPath === 'clock' ? 2.5 : 1.5} className="transition-all duration-300" />
-
-                  {/* Gates & registers blocks */}
-                  <g fill="#09090d" stroke="#4c4c5c" strokeWidth="1.5">
-                    {/* Multiplexer */}
-                    <polygon points="200,80 200,160 270,140 270,100" className="hover:stroke-[#a78bfa] transition-colors" />
-                    {/* Arithmetic logic Adder block */}
-                    <polygon points="350,150 440,150 420,190 370,190" className="hover:stroke-[#a78bfa] transition-colors" />
-                    {/* D Flip-Flop */}
-                    <rect x="420" y="210" width="80" height="60" rx="3" className="hover:stroke-[#a78bfa] transition-colors" />
-                    {/* Logical AND Gate */}
-                    <path d="M 560 140 L 610 140 C 640 140, 640 200, 610 200 L 560 200 Z" className="hover:stroke-[#a78bfa] transition-colors" />
-                  </g>
-                </g>
-
-                {/* Pin annotations */}
-                <g fill="#778" fontFamily="monospace" fontSize="8" fontWeight="bold">
-                  <text x="45" y="95">OPCODE_A[31:0]</text>
-                  <text x="45" y="135">OPCODE_B[31:0]</text>
-                  <text x="115" y="295" fill="#f59e0b">SYS_CLK</text>
-                  <text x="210" y="125" fill="#888">MUX_2_1</text>
-                  <text x="395" y="172" fill="#888">ADD_32</text>
-                  <text x="460" y="245">DFF_REG</text>
-                  <text x="430" y="260" fill="#f59e0b" fontSize="7">&gt;</text>
-                  <text x="590" y="175">AND_G</text>
-                </g>
-              </svg>
-            </div>
-
-            <div className="flex justify-between items-center mt-3 border-t border-[rgba(255,255,255,0.03)] pt-2 text-[10px] font-mono text-slate-500">
-              <span>RTL Compiler output mapping: <span className="text-[#a78bfa] font-bold">{projectId}</span></span>
-              <span>Cell Type: Synthesized TSMC7</span>
             </div>
           </div>
         );
@@ -2250,7 +2203,13 @@ function EngineeringViewer({ src, alt, fallbackType, projectId }: EngineeringVie
           </button>
           <span className="h-3 w-[1px] bg-slate-800" />
           <button
-            onClick={() => setIsFullscreen(!isFullscreen)}
+            onClick={() => {
+              if (onEnlarge) {
+                onEnlarge();
+              } else {
+                setIsFullscreen(!isFullscreen);
+              }
+            }}
             className="p-1 rounded hover:bg-slate-800 hover:text-white transition-all cursor-pointer"
             title="Toggle Fullscreen"
           >
@@ -2291,7 +2250,14 @@ function EngineeringViewer({ src, alt, fallbackType, projectId }: EngineeringVie
               src={resolveAssetUrl(src)}
               alt={alt}
               onError={() => setFailed(true)}
-              className="max-w-full max-h-[500px] object-contain select-none"
+              onClick={() => {
+                if (onEnlarge) {
+                  onEnlarge();
+                } else {
+                  setIsFullscreen(true);
+                }
+              }}
+              className="max-w-full max-h-[500px] object-contain select-none cursor-zoom-in"
             />
           )}
         </div>

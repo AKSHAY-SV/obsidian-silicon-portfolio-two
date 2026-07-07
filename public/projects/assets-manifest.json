@@ -137,19 +137,84 @@
       }
     ],
     "synthesis": [],
-    "timing": [],
-    "layout": [],
+    "timing": [
+      {
+        "name": "Static Timing  Analysis.png",
+        "url": "/projects/rv32im-soc-processor/timing/Static Timing  Analysis.png",
+        "size": "1.4 MB"
+      }
+    ],
+    "layout": [
+      {
+        "name": "gdsii without fill.png",
+        "url": "/projects/rv32im-soc-processor/gdsii/gdsii without fill.png",
+        "size": "180.0 KB"
+      },
+      {
+        "name": "implementation results.png",
+        "url": "/projects/rv32im-soc-processor/gdsii/implementation results.png",
+        "size": "1.4 MB"
+      },
+      {
+        "name": "routing layers.png",
+        "url": "/projects/rv32im-soc-processor/gdsii/routing layers.png",
+        "size": "136.8 KB"
+      }
+    ],
     "floorplan": [
+      {
+        "name": "floorplan.png",
+        "url": "/projects/rv32im-soc-processor/floorplan/floorplan.png",
+        "size": "260.0 KB"
+      },
       {
         "name": "floorplan.svg",
         "url": "/projects/rv32im-soc-processor/floorplan/floorplan.svg",
-        "size": "15.3 KB"
+        "size": "21.6 KB"
       }
     ],
-    "gds": [],
-    "gdsii": [],
+    "gds": [
+      {
+        "name": "gdsii without fill.png",
+        "url": "/projects/rv32im-soc-processor/gdsii/gdsii without fill.png",
+        "size": "180.0 KB"
+      },
+      {
+        "name": "implementation results.png",
+        "url": "/projects/rv32im-soc-processor/gdsii/implementation results.png",
+        "size": "1.4 MB"
+      },
+      {
+        "name": "routing layers.png",
+        "url": "/projects/rv32im-soc-processor/gdsii/routing layers.png",
+        "size": "136.8 KB"
+      }
+    ],
+    "gdsii": [
+      {
+        "name": "gdsii without fill.png",
+        "url": "/projects/rv32im-soc-processor/gdsii/gdsii without fill.png",
+        "size": "180.0 KB"
+      },
+      {
+        "name": "implementation results.png",
+        "url": "/projects/rv32im-soc-processor/gdsii/implementation results.png",
+        "size": "1.4 MB"
+      },
+      {
+        "name": "routing layers.png",
+        "url": "/projects/rv32im-soc-processor/gdsii/routing layers.png",
+        "size": "136.8 KB"
+      }
+    ],
     "rtl": [],
-    "block-diagram": [],
+    "block-diagram": [
+      {
+        "name": "block-diagram.png",
+        "url": "/projects/rv32im-soc-processor/block-diagram.png",
+        "size": "661.1 KB"
+      }
+    ],
     "documentation": []
   },
   "uart": {
