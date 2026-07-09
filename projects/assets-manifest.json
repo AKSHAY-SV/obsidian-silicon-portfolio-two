@@ -145,18 +145,7 @@
       }
     ],
     "layout": [],
-    "floorplan": [
-      {
-        "name": "floorplan.png",
-        "url": "/projects/rv32im-soc-processor/floorplan/floorplan.png",
-        "size": "471.7 KB"
-      },
-      {
-        "name": "floorplan.svg",
-        "url": "/projects/rv32im-soc-processor/floorplan/floorplan.svg",
-        "size": "21.6 KB"
-      }
-    ],
+    "floorplan": [],
     "gds": [],
     "gdsii": [
       {
