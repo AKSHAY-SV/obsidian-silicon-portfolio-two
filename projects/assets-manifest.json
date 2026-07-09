@@ -147,23 +147,7 @@
     "layout": [],
     "floorplan": [],
     "gds": [],
-    "gdsii": [
-      {
-        "name": "gdsii without fill.png",
-        "url": "/projects/rv32im-soc-processor/gdsii/gdsii without fill.png",
-        "size": "331.1 KB"
-      },
-      {
-        "name": "implementation results.png",
-        "url": "/projects/rv32im-soc-processor/gdsii/implementation results.png",
-        "size": "2.5 MB"
-      },
-      {
-        "name": "routing layers.png",
-        "url": "/projects/rv32im-soc-processor/gdsii/routing layers.png",
-        "size": "245.4 KB"
-      }
-    ],
+    "gdsii": [],
     "rtl": [],
     "block-diagram": [],
     "documentation": []
